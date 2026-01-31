@@ -8,7 +8,6 @@ import { fileURLToPath, URL } from 'url'
 
 import tailwindcss from '@tailwindcss/vite'
 import { cloudflare } from '@cloudflare/vite-plugin'
-import neon from './neon-vite-plugin.ts'
 
 const config = defineConfig({
   resolve: {
@@ -24,7 +23,6 @@ const config = defineConfig({
       strategy: ['url'],
     }),
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
-    neon,
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ['./tsconfig.json'],
