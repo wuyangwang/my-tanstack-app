@@ -67,7 +67,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <Header />
-        {children}
+        <main className="pt-16">
+          {children}
+        </main>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
