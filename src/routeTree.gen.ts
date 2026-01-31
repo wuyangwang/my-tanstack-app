@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DouyinToolIndexRouteImport } from './routes/douyin-tool/index'
 import { Route as DemoTrpcTodoRouteImport } from './routes/demo/trpc-todo'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoI18nRouteImport } from './routes/demo.i18n'
@@ -31,6 +32,11 @@ import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ss
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DouyinToolIndexRoute = DouyinToolIndexRouteImport.update({
+  id: '/douyin-tool/',
+  path: '/douyin-tool/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoTrpcTodoRoute = DemoTrpcTodoRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/demo/i18n': typeof DemoI18nRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/douyin-tool/': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/demo/i18n': typeof DemoI18nRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/douyin-tool': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/demo/i18n': typeof DemoI18nRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/douyin-tool/': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/demo/api/names': typeof DemoApiNamesRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/demo/i18n'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/douyin-tool/'
     | '/api/auth/$'
     | '/api/trpc/$'
     | '/demo/api/names'
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/demo/i18n'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/douyin-tool'
     | '/api/auth/$'
     | '/api/trpc/$'
     | '/demo/api/names'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/demo/i18n'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/douyin-tool/'
     | '/api/auth/$'
     | '/api/trpc/$'
     | '/demo/api/names'
@@ -250,6 +262,7 @@ export interface RootRouteChildren {
   DemoI18nRoute: typeof DemoI18nRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   DemoTrpcTodoRoute: typeof DemoTrpcTodoRoute
+  DouyinToolIndexRoute: typeof DouyinToolIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/douyin-tool/': {
+      id: '/douyin-tool/'
+      path: '/douyin-tool'
+      fullPath: '/douyin-tool/'
+      preLoaderRoute: typeof DouyinToolIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/trpc-todo': {
@@ -402,6 +422,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoI18nRoute: DemoI18nRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   DemoTrpcTodoRoute: DemoTrpcTodoRoute,
+  DouyinToolIndexRoute: DouyinToolIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
