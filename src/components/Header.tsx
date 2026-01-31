@@ -29,7 +29,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-16 px-4 flex items-center bg-gray-900/70 backdrop-blur-lg border-b border-white/10 text-white z-40">
+      <header className="fixed top-0 left-0 right-0 h-16 px-4 flex items-center bg-gray-900 backdrop-blur-lg border-b border-white/10 text-white z-40">
         <button
           onClick={() => setIsOpen(true)}
           className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
@@ -39,11 +39,7 @@ export default function Header() {
         </button>
         <h1 className="ml-4 text-xl font-semibold">
           <Link to="/">
-            <img
-              src="/tanstack-word-logo-white.svg"
-              alt="TanStack Logo"
-              className="h-10"
-            />
+            抖音工具箱
           </Link>
         </h1>
       </header>
@@ -53,7 +49,7 @@ export default function Header() {
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-bold">导航</h2>
           <button
             onClick={() => setIsOpen(false)}
@@ -92,7 +88,7 @@ export default function Header() {
           </Link>
         </nav>
 
-        <div className="p-4 border-t border-gray-700 bg-gray-800 flex flex-col gap-2">
+        <div className="p-4 border-t flex flex-col gap-2">
           <BetterAuthHeader />
 
           <ParaglideLocaleSwitcher />
