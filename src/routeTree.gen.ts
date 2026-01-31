@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTrpcTodoRouteImport } from './routes/demo/trpc-todo'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
-import { Route as DemoNeonRouteImport } from './routes/demo/neon'
 import { Route as DemoI18nRouteImport } from './routes/demo.i18n'
 import { Route as DemoDrizzleRouteImport } from './routes/demo/drizzle'
 import { Route as DemoBetterAuthRouteImport } from './routes/demo/better-auth'
@@ -42,11 +41,6 @@ const DemoTrpcTodoRoute = DemoTrpcTodoRouteImport.update({
 const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
   id: '/demo/tanstack-query',
   path: '/demo/tanstack-query',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoNeonRoute = DemoNeonRouteImport.update({
-  id: '/demo/neon',
-  path: '/demo/neon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoI18nRoute = DemoI18nRouteImport.update({
@@ -130,7 +124,6 @@ export interface FileRoutesByFullPath {
   '/demo/better-auth': typeof DemoBetterAuthRoute
   '/demo/drizzle': typeof DemoDrizzleRoute
   '/demo/i18n': typeof DemoI18nRoute
-  '/demo/neon': typeof DemoNeonRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -151,7 +144,6 @@ export interface FileRoutesByTo {
   '/demo/better-auth': typeof DemoBetterAuthRoute
   '/demo/drizzle': typeof DemoDrizzleRoute
   '/demo/i18n': typeof DemoI18nRoute
-  '/demo/neon': typeof DemoNeonRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -173,7 +165,6 @@ export interface FileRoutesById {
   '/demo/better-auth': typeof DemoBetterAuthRoute
   '/demo/drizzle': typeof DemoDrizzleRoute
   '/demo/i18n': typeof DemoI18nRoute
-  '/demo/neon': typeof DemoNeonRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -196,7 +187,6 @@ export interface FileRouteTypes {
     | '/demo/better-auth'
     | '/demo/drizzle'
     | '/demo/i18n'
-    | '/demo/neon'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
     | '/api/auth/$'
@@ -217,7 +207,6 @@ export interface FileRouteTypes {
     | '/demo/better-auth'
     | '/demo/drizzle'
     | '/demo/i18n'
-    | '/demo/neon'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
     | '/api/auth/$'
@@ -238,7 +227,6 @@ export interface FileRouteTypes {
     | '/demo/better-auth'
     | '/demo/drizzle'
     | '/demo/i18n'
-    | '/demo/neon'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
     | '/api/auth/$'
@@ -260,7 +248,6 @@ export interface RootRouteChildren {
   DemoBetterAuthRoute: typeof DemoBetterAuthRoute
   DemoDrizzleRoute: typeof DemoDrizzleRoute
   DemoI18nRoute: typeof DemoI18nRoute
-  DemoNeonRoute: typeof DemoNeonRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   DemoTrpcTodoRoute: typeof DemoTrpcTodoRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -298,13 +285,6 @@ declare module '@tanstack/react-router' {
       path: '/demo/tanstack-query'
       fullPath: '/demo/tanstack-query'
       preLoaderRoute: typeof DemoTanstackQueryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo/neon': {
-      id: '/demo/neon'
-      path: '/demo/neon'
-      fullPath: '/demo/neon'
-      preLoaderRoute: typeof DemoNeonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/i18n': {
@@ -420,7 +400,6 @@ const rootRouteChildren: RootRouteChildren = {
   DemoBetterAuthRoute: DemoBetterAuthRoute,
   DemoDrizzleRoute: DemoDrizzleRoute,
   DemoI18nRoute: DemoI18nRoute,
-  DemoNeonRoute: DemoNeonRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   DemoTrpcTodoRoute: DemoTrpcTodoRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
