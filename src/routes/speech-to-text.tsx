@@ -219,7 +219,6 @@ function SpeechToText() {
 								<SelectContent className="bg-card border-border text-foreground">
 									<SelectItem value="onnx-community/whisper-tiny">Whisper Tiny (极快)</SelectItem>
 									<SelectItem value="onnx-community/whisper-base">Whisper Base (准)</SelectItem>
-									<SelectItem value="onnx-community/SenseVoiceSmall">SenseVoice Small (中文推荐)</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -245,7 +244,6 @@ function SpeechToText() {
 							<Switch 
 								checked={task === "translate"} 
 								onCheckedChange={(checked) => setTask(checked ? "translate" : "transcribe")}
-								disabled={model.includes("SenseVoice")}
 								className="data-[state=checked]:bg-primary"
 							/>
 						</div>

@@ -26,9 +26,8 @@ async function getTranscriber(model: string) {
   
   self.postMessage({ status: 'init', message: `Initializing ${model} on ${device}...` });
   
-  // Decide task type based on model
-  const isSenseVoice = model.includes('SenseVoice');
-  const taskType = isSenseVoice ? 'feature-extraction' : 'automatic-speech-recognition';
+  // For Whisper, we use automatic-speech-recognition
+  const taskType = 'automatic-speech-recognition';
 
   transcriber = await pipeline(taskType as any, model, {
     device: device as any,
@@ -53,23 +52,14 @@ self.onmessage = async (event) => {
     
     self.postMessage({ status: 'processing', message: 'Processing audio...' });
     
-    let result: any;
-    if (model.includes('SenseVoice')) {
-      // SenseVoice usage via Transformers.js might differ slightly depending on the export
-      // Standard way for many newer models in transformers.js v3
-      result = await p(audio, {
-        language: language === 'chinese' ? 'zh' : 'en',
-      });
-    } else {
-      // Whisper standard ASR
-      result = await p(audio, {
-        chunk_length_s: 30,
-        stride_length_s: 5,
-        task: task,
-        language: language,
-        return_timestamps: true,
-      });
-    }
+    // Whisper standard ASR
+    const result = await p(audio, {
+      chunk_length_s: 30,
+      stride_length_s: 5,
+      task: task,
+      language: language,
+      return_timestamps: true,
+    });
     
     self.postMessage({ status: 'complete', result });
   } catch (error: any) {
