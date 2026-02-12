@@ -66,7 +66,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <ThemeProvider attribute="class" defaultTheme="system" storageKey="vite-ui-theme">
           <Header />
           <main className="pt-16">
             {children}
