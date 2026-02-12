@@ -10,7 +10,7 @@ export function useWorker() {
     return () => {
       worker.terminate();
     };
-  }, [workerUrl]);
+  }, []);
 
   const postMessage = useCallback((message: any, transfer?: Transferable[]) => {
     if (workerRef.current) {
