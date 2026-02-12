@@ -10,13 +10,13 @@ export const Route = createFileRoute('/')({ component: App })
 function App() {
   const features = [
     {
-      icon: <Video className="w-12 h-12 text-white" />,
+      icon: <Video className="w-12 h-12" />,
       title: '抖音工具',
       description: '高效的抖音视频下载与分析工具。',
       link: '/douyin-tool'
     },
     {
-      icon: <Mic className="w-12 h-12 text-white" />,
+      icon: <Mic className="w-12 h-12" />,
       title: '语音转文字',
       description: '基于 OpenAI Whisper 的高性能本地语音识别。',
       link: '/speech-to-text'
@@ -24,21 +24,21 @@ function App() {
   ]
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-white selection:text-black">
-      <section className="relative py-32 px-6 text-center border-b border-white/10">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/30">
+      <section className="relative py-32 px-6 text-center border-b border-border">
         <div className="relative max-w-5xl mx-auto">
           <div className="flex items-center justify-center mb-6">
-            <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter">
+            <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-primary">
               工具箱
             </h1>
           </div>
-          <p className="text-xl md:text-2xl text-zinc-400 mb-12 font-medium tracking-tight max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-12 font-medium tracking-tight max-w-2xl mx-auto">
             一系列高效、现代化的工具集合，旨在提升您的工作效率。
           </p>
           <div className="flex flex-col items-center gap-4">
             <Link
               to="/douyin-tool"
-              className="group flex items-center gap-2 px-10 py-4 bg-white text-black font-bold rounded-full transition-all hover:scale-105 active:scale-95"
+              className="group flex items-center gap-2 px-10 py-4 bg-primary text-primary-foreground font-bold rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
             >
               立刻开始
               <ArrowRight className="group-hover:translate-x-1 transition-transform" />
@@ -54,13 +54,13 @@ function App() {
             <Link
               key={index}
               to={feature.link}
-              className="group block bg-zinc-900 border border-white/10 rounded-2xl p-8 hover:bg-white hover:text-black transition-all duration-500"
+              className="group block bg-card border border-border rounded-2xl p-8 hover:border-primary/50 hover:bg-accent transition-all duration-300 shadow-sm"
             >
-              <div className="mb-6 group-hover:invert transition-all duration-500">{feature.icon}</div>
+              <div className="mb-6 text-primary transition-all duration-300 group-hover:scale-110">{feature.icon}</div>
               <h3 className="text-2xl font-bold mb-4 uppercase tracking-tight">
                 {feature.title}
               </h3>
-              <p className="text-zinc-400 group-hover:text-zinc-800 leading-relaxed text-lg transition-colors">
+              <p className="text-muted-foreground leading-relaxed text-lg transition-colors">
                 {feature.description}
               </p>
             </Link>
@@ -68,7 +68,7 @@ function App() {
         </div>
       </section>
 
-      <footer className="py-12 border-t border-white/10 text-center text-zinc-500 text-sm uppercase tracking-widest">
+      <footer className="py-12 border-t border-border text-center text-muted-foreground text-sm uppercase tracking-widest">
         &copy; {new Date().getFullYear()} 工具箱. Built with TanStack Start.
       </footer>
     </div>

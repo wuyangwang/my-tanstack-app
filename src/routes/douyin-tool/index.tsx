@@ -55,18 +55,18 @@ function DouyinTool() {
 	return (
 		<div className="container mx-auto max-w-4xl space-y-12 px-4 py-20">
 			<div className="flex flex-col items-center space-y-6 text-center">
-				<h1 className="font-black text-6xl text-white uppercase tracking-tighter lg:text-8xl">
+				<h1 className="font-black text-6xl text-primary uppercase tracking-tighter lg:text-8xl">
 					抖音视频提取
 				</h1>
-				<p className="max-w-lg text-zinc-400 text-xl font-medium tracking-tight">
+				<p className="max-w-lg text-muted-foreground text-xl font-medium tracking-tight">
 					解析抖音分享链接，获取无水印和有水印视频地址。
 				</p>
 			</div>
 
-			<Card className="bg-zinc-900 border-white/10 text-white">
+			<Card className="bg-card border-border text-foreground shadow-lg">
 				<CardHeader>
-					<CardTitle className="uppercase tracking-widest text-sm">粘贴分享链接</CardTitle>
-					<CardDescription className="text-zinc-500">
+					<CardTitle className="uppercase tracking-widest text-sm text-primary">粘贴分享链接</CardTitle>
+					<CardDescription className="text-muted-foreground">
 						在此粘贴从抖音 App 复制的分享文本或链接
 					</CardDescription>
 				</CardHeader>
@@ -75,12 +75,12 @@ function DouyinTool() {
 						placeholder="例如：6.92 p@y.pg 01/21 Vmu:/ 复制打开抖音，看看【九月的作品】白露..."
 						value={shareText}
 						onChange={(e) => setShareText(e.target.value)}
-						className="min-h-[120px] bg-black border-white/10 text-white placeholder:text-zinc-700 focus-visible:ring-white"
+						className="min-h-[120px] bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
 					/>
 					<Button
 						onClick={handleParse}
 						disabled={loading}
-						className="w-full bg-white text-black font-bold hover:bg-zinc-200"
+						className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md"
 					>
 						{loading ? "正在解析..." : "立即解析"}
 					</Button>
@@ -95,7 +95,7 @@ function DouyinTool() {
 
 			{result && (
 				<div className="fade-in slide-in-from-bottom-4 grid animate-in gap-6 duration-500">
-					<Card className="overflow-hidden">
+					<Card className="overflow-hidden bg-card border-border shadow-xl">
 						<div className="grid md:grid-cols-2">
 							<div className="group relative flex aspect-video items-center justify-center bg-black">
 								{result.cover && (
@@ -110,7 +110,7 @@ function DouyinTool() {
 								</div>
 							</div>
 							<div className="flex flex-col justify-center p-6">
-								<h3 className="line-clamp-2 font-bold text-xl">
+								<h3 className="line-clamp-2 font-bold text-xl text-foreground">
 									{result.title}
 								</h3>
 								<p className="mt-2 text-muted-foreground text-sm">
@@ -121,17 +121,18 @@ function DouyinTool() {
 						<CardContent className="space-y-4 pt-6">
 							<div className="grid gap-4 sm:grid-cols-2">
 								<div className="space-y-2">
-									<p className="font-medium text-sm">无水印视频</p>
+									<p className="font-medium text-sm text-foreground">无水印视频</p>
 									<div className="flex gap-2">
 										<Button
 											variant="outline"
-											className="flex-1"
+											className="flex-1 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
 											onClick={() => window.open(result.url, "_blank")}
 										>
 											<ExternalLink className="mr-2 h-4 w-4" /> 预览
 										</Button>
 										<Button
 											variant="secondary"
+											className="hover:bg-primary/20 transition-colors"
 											onClick={() => copyToClipboard(result.url)}
 										>
 											<Copy className="h-4 w-4" />
@@ -139,17 +140,18 @@ function DouyinTool() {
 									</div>
 								</div>
 								<div className="space-y-2">
-									<p className="font-medium text-sm">有水印视频</p>
+									<p className="font-medium text-sm text-foreground">有水印视频</p>
 									<div className="flex gap-2">
 										<Button
 											variant="outline"
-											className="flex-1"
+											className="flex-1 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
 											onClick={() => window.open(result.wm_url, "_blank")}
 										>
 											<ExternalLink className="mr-2 h-4 w-4" /> 预览
 										</Button>
 										<Button
 											variant="secondary"
+											className="hover:bg-primary/20 transition-colors"
 											onClick={() => copyToClipboard(result.wm_url)}
 										>
 											<Copy className="h-4 w-4" />

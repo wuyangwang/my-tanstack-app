@@ -31,16 +31,16 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-16 px-4 flex items-center justify-between bg-background border-b border-border text-foreground z-40">
+      <header className="fixed top-0 left-0 right-0 h-16 px-4 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border text-foreground z-40">
         <div className="flex items-center">
           <button
             onClick={() => setIsOpen(true)}
-            className="p-2 hover:bg-accent rounded-lg transition-colors"
+            className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors text-foreground"
             aria-label="Open menu"
           >
             <Menu size={24} />
           </button>
-          <h1 className="ml-4 text-xl font-semibold uppercase tracking-wider">
+          <h1 className="ml-4 text-xl font-bold uppercase tracking-wider text-primary">
             <Link to="/">
               工具箱
             </Link>
@@ -57,10 +57,10 @@ export default function Header() {
         }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-xl font-bold uppercase tracking-widest">导航</h2>
+          <h2 className="text-xl font-bold uppercase tracking-widest text-primary">导航</h2>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 hover:bg-accent rounded-lg transition-colors"
+            className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
             aria-label="Close menu"
           >
             <X size={24} />
