@@ -216,6 +216,7 @@ function SpeechToText() {
 								<SelectContent>
 									<SelectItem value="onnx-community/whisper-tiny">Whisper Tiny (极快)</SelectItem>
 									<SelectItem value="onnx-community/whisper-base">Whisper Base (准)</SelectItem>
+									<SelectItem value="onnx-community/SenseVoiceSmall">SenseVoice Small (中文推荐/极快)</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -236,11 +237,12 @@ function SpeechToText() {
 						<div className="flex items-center justify-between">
 							<div className="space-y-0.5">
 								<Label>翻译为英文</Label>
-								<p className="text-[0.8rem] text-muted-foreground">将非英文语音翻译为英文</p>
+								<p className="text-[0.8rem] text-muted-foreground">将非英文语音翻译为英文 (仅限 Whisper 模型)</p>
 							</div>
 							<Switch 
 								checked={task === "translate"} 
-								onCheckedChange={(checked) => setTask(checked ? "translate" : "transcribe")} 
+								onCheckedChange={(checked) => setTask(checked ? "translate" : "transcribe")}
+								disabled={model.includes("SenseVoice")}
 							/>
 						</div>
 					</CardContent>
