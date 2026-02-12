@@ -218,7 +218,9 @@ function SpeechToText() {
 								</SelectTrigger>
 								<SelectContent className="bg-card border-border text-foreground">
 									<SelectItem value="onnx-community/whisper-tiny">Whisper Tiny (极快)</SelectItem>
-									<SelectItem value="onnx-community/whisper-base">Whisper Base (准)</SelectItem>
+									<SelectItem value="onnx-community/whisper-base">Whisper Base (中等)</SelectItem>
+									<SelectItem value="onnx-community/whisper-small">Whisper Small (准)</SelectItem>
+									<SelectItem value="onnx-community/whisper-large-v3-chinese-ONNX">Whisper Large V3 Chinese (最准)</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -275,7 +277,7 @@ function SpeechToText() {
 						)}
 						
 						<p className="text-sm text-muted-foreground text-center">
-							首次加载模型可能需要一些时间 (约 40-150MB)，之后会从浏览器缓存读取。
+							首次加载模型可能需要一些时间 (40MB - 1GB+)，之后会从浏览器缓存读取。建议使用 WebGPU 加速。
 						</p>
 					</CardContent>
 				</Card>
