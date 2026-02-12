@@ -1,10 +1,10 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-export function useWorker(workerUrl: URL | string) {
+export function useWorker() {
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(workerUrl, { type: 'module' });
+    const worker = new Worker(new URL("../lib/whisper-worker.ts?worker", import.meta.url), { type: 'module' });
     workerRef.current = worker;
 
     return () => {

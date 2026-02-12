@@ -1,10 +1,7 @@
-"use client";
-
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { useWorker } from "./use-worker";
 import { decodeAudioData } from "@/lib/audio-utils";
-import WhisperWorker from "@/lib/whisper-worker.ts?worker";
 
 export type TranscriptionTask = "transcribe" | "translate";
 export type TranscriptionLanguage = "chinese" | "english";
@@ -27,8 +24,7 @@ export function useTranscription() {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [result, setResult] = useState<TranscriptionResult | null>(null);
 
-  const workerUrl = useMemo(() => new WhisperWorker(), []);
-  const { postMessage, setOnMessage } = useWorker(workerUrl);
+  const { postMessage, setOnMessage } = useWorker();
 
   useEffect(() => {
     setOnMessage((e: MessageEvent) => {
