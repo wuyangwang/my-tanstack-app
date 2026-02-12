@@ -3,39 +3,31 @@
 // - Router example: https://github.com/TanStack/router/tree/main/examples/react/i18n-paraglide#switching-locale
 import { getLocale, locales, setLocale } from '@/paraglide/runtime'
 import { m } from '@/paraglide/messages'
+import { cn } from '@/lib/utils'
 
 export default function ParaglideLocaleSwitcher() {
   const currentLocale = getLocale()
 
   return (
     <div
-      style={{
-        display: 'flex',
-        gap: '0.5rem',
-        alignItems: 'center',
-        color: 'inherit',
-      }}
+      className="flex gap-2 items-center text-inherit"
       aria-label={m.language_label()}
     >
-      <span style={{ opacity: 0.85 }}>
+      <span className="opacity-80 text-sm">
         {m.current_locale({ locale: currentLocale })}
       </span>
-      <div style={{ display: 'flex', gap: '0.25rem' }}>
+      <div className="flex gap-1">
         {locales.map((locale) => (
           <button
             key={locale}
             onClick={() => setLocale(locale)}
             aria-pressed={locale === currentLocale}
-            style={{
-              cursor: 'pointer',
-              padding: '0.35rem 0.75rem',
-              borderRadius: '999px',
-              border: '1px solid #d1d5db',
-              background: locale === currentLocale ? '#0f172a' : 'transparent',
-              color: locale === currentLocale ? '#f8fafc' : 'inherit',
-              fontWeight: locale === currentLocale ? 700 : 500,
-              letterSpacing: '0.01em',
-            }}
+            className={cn(
+              "cursor-pointer px-3 py-1 rounded-full border text-xs transition-colors",
+              locale === currentLocale
+                ? "bg-primary text-primary-foreground border-primary font-bold"
+                : "bg-transparent border-border hover:bg-accent text-foreground font-medium"
+            )}
           >
             {locale.toUpperCase()}
           </button>

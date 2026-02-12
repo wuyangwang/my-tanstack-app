@@ -118,81 +118,84 @@ function SpeechToText() {
 	};
 
 	return (
-		<div className="container mx-auto max-w-4xl space-y-8 px-4 py-10">
-			<div className="flex flex-col items-center space-y-4 text-center">
-				<h1 className="bg-gradient-to-r from-blue-500 to-teal-600 bg-clip-text font-extrabold text-4xl text-transparent tracking-tight lg:text-5xl">
+		<div className="container mx-auto max-w-4xl space-y-12 px-4 py-20">
+			<div className="flex flex-col items-center space-y-6 text-center">
+				<h1 className="font-black text-6xl text-white uppercase tracking-tighter lg:text-8xl">
 					语音转文字
 				</h1>
-				<p className="max-w-lg text-muted-foreground">
-					使用 Whisper 模型进行 ASR (Automatic Speech Recognition，自动语音识别)。在浏览器中直接将语音转换为文字，保护隐私且高效。
+				<p className="max-w-xl text-zinc-400 text-xl font-medium tracking-tight">
+					使用 Whisper 模型进行高性能本地语音识别。
+					在浏览器中直接转换，保护隐私且高效。
 				</p>
 			</div>
 
-			<div className="grid gap-6 md:grid-cols-3">
-				<Card className="md:col-span-2">
+			<div className="grid gap-8 md:grid-cols-3">
+				<Card className="md:col-span-2 bg-zinc-900 border-white/10 text-white">
 					<CardHeader>
-						<CardTitle>音频输入</CardTitle>
-						<CardDescription>选择一种方式加载音频</CardDescription>
+						<CardTitle className="uppercase tracking-widest text-sm text-zinc-400">音频输入</CardTitle>
+						<CardDescription className="text-zinc-500 text-lg">选择一种方式加载音频</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<Tabs defaultValue="file" className="w-full">
-							<TabsList className="grid w-full grid-cols-3">
-								<TabsTrigger value="file"><Upload className="mr-2 h-4 w-4" /> 文件</TabsTrigger>
-								<TabsTrigger value="url"><LinkIcon className="mr-2 h-4 w-4" /> URL</TabsTrigger>
-								<TabsTrigger value="record"><Mic className="mr-2 h-4 w-4" /> 录音</TabsTrigger>
+							<TabsList className="grid w-full grid-cols-3 bg-black border border-white/10 p-1">
+								<TabsTrigger value="file" className="data-[state=active]:bg-white data-[state=active]:text-black"><Upload className="mr-2 h-4 w-4" /> 文件</TabsTrigger>
+								<TabsTrigger value="url" className="data-[state=active]:bg-white data-[state=active]:text-black"><LinkIcon className="mr-2 h-4 w-4" /> URL</TabsTrigger>
+								<TabsTrigger value="record" className="data-[state=active]:bg-white data-[state=active]:text-black"><Mic className="mr-2 h-4 w-4" /> 录音</TabsTrigger>
 							</TabsList>
 							
-							<TabsContent value="file" className="space-y-4 pt-4">
+							<TabsContent value="file" className="space-y-4 pt-6">
 								<div className="grid w-full items-center gap-1.5">
-									<Label htmlFor="audio-file">音频文件</Label>
+									<Label htmlFor="audio-file" className="text-zinc-400">音频文件</Label>
 									<Input 
 										id="audio-file" 
 										type="file" 
 										accept="audio/*" 
 										onChange={(e) => setFile(e.target.files?.[0] || null)}
+										className="bg-black border-white/10 focus-visible:ring-white"
 									/>
 								</div>
-								<Button onClick={handleFileProcess} disabled={loading || !file} className="w-full">
+								<Button onClick={handleFileProcess} disabled={loading || !file} className="w-full bg-white text-black font-bold hover:bg-zinc-200">
 									{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
 									开始转换
 								</Button>
 							</TabsContent>
 							
-							<TabsContent value="url" className="space-y-4 pt-4">
+							<TabsContent value="url" className="space-y-4 pt-6">
 								<div className="grid w-full items-center gap-1.5">
-									<Label htmlFor="audio-url">音频 URL</Label>
+									<Label htmlFor="audio-url" className="text-zinc-400">音频 URL</Label>
 									<Input 
 										id="audio-url" 
 										placeholder="https://example.com/audio.mp3" 
 										value={audioUrl}
 										onChange={(e) => setAudioUrl(e.target.value)}
+										className="bg-black border-white/10 focus-visible:ring-white"
 									/>
 								</div>
-								<Button onClick={handleUrlProcess} disabled={loading || !audioUrl} className="w-full">
+								<Button onClick={handleUrlProcess} disabled={loading || !audioUrl} className="w-full bg-white text-black font-bold hover:bg-zinc-200">
 									{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
 									开始转换
 								</Button>
 							</TabsContent>
 							
-							<TabsContent value="record" className="space-y-4 pt-4 text-center">
+							<TabsContent value="record" className="space-y-4 pt-6 text-center">
 								<div className="flex flex-col items-center justify-center space-y-4 py-4">
 									{isRecording ? (
-										<Button variant="destructive" size="lg" onClick={stopRecording} className="h-16 w-16 rounded-full">
+										<Button variant="destructive" size="lg" onClick={stopRecording} className="h-16 w-16 rounded-full animate-pulse">
 											<StopCircle className="h-8 w-8" />
 										</Button>
 									) : (
-										<Button variant="outline" size="lg" onClick={startRecording} className="h-16 w-16 rounded-full">
+										<Button variant="outline" size="lg" onClick={startRecording} className="h-16 w-16 rounded-full border-white/10 hover:bg-white hover:text-black">
 											<Mic className="h-8 w-8" />
 										</Button>
 									)}
-									<p className="text-sm text-muted-foreground">
+									<p className="text-sm text-zinc-400">
 										{isRecording ? "正在录音..." : recordingBlob ? "录音已完成" : "点击麦克风开始录音"}
 									</p>
 									{recordingBlob && !isRecording && (
-										<audio controls src={URL.createObjectURL(recordingBlob)} className="w-full" />
+										<audio controls src={URL.createObjectURL(recordingBlob)} className="w-full invert" />
 									)}
 								</div>
-								<Button onClick={handleRecordingProcess} disabled={loading || !recordingBlob || isRecording} className="w-full">
+								<Button onClick={handleRecordingProcess} disabled={loading || !recordingBlob || isRecording} className="w-full bg-white text-black font-bold hover:bg-zinc-200">
 									{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
 									转换录音
 								</Button>
@@ -201,53 +204,55 @@ function SpeechToText() {
 					</CardContent>
 				</Card>
 
-				<Card>
+				<Card className="bg-zinc-900 border-white/10 text-white">
 					<CardHeader>
-						<CardTitle>配置</CardTitle>
-						<CardDescription>模型和任务设置</CardDescription>
+						<CardTitle className="uppercase tracking-widest text-sm text-zinc-400">配置</CardTitle>
+						<CardDescription className="text-zinc-500">模型和任务设置</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="space-y-2">
-							<Label>模型</Label>
+							<Label className="text-zinc-400">模型</Label>
 							<Select value={model} onValueChange={setModel}>
-								<SelectTrigger>
+								<SelectTrigger className="bg-black border-white/10">
 									<SelectValue placeholder="选择模型" />
 								</SelectTrigger>
-								<SelectContent>
+								<SelectContent className="bg-zinc-900 border-white/10 text-white">
 									<SelectItem value="onnx-community/whisper-tiny">Whisper Tiny (极快)</SelectItem>
 									<SelectItem value="onnx-community/whisper-base">Whisper Base (准)</SelectItem>
-									<SelectItem value="onnx-community/SenseVoiceSmall">SenseVoice Small (中文推荐/极快)</SelectItem>
+									<SelectItem value="onnx-community/SenseVoiceSmall">SenseVoice Small (中文推荐)</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 
 						<div className="space-y-2">
-							<Label>识别语言</Label>
+							<Label className="text-zinc-400">识别语言</Label>
 							<Select value={language as string} onValueChange={(v) => setLanguage(v as any)}>
-								<SelectTrigger>
+								<SelectTrigger className="bg-black border-white/10">
 									<SelectValue placeholder="选择语言" />
 								</SelectTrigger>
-								<SelectContent>
+								<SelectContent className="bg-zinc-900 border-white/10 text-white">
 									<SelectItem value="chinese">中文简体</SelectItem>
 									<SelectItem value="english">英文</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 
-						<div className="flex items-center justify-between">
+						<div className="flex items-center justify-between pt-2">
 							<div className="space-y-0.5">
-								<Label>翻译为英文</Label>
-								<p className="text-[0.8rem] text-muted-foreground">将非英文语音翻译为英文 (仅限 Whisper 模型)</p>
+								<Label className="text-zinc-400">翻译为英文</Label>
+								<p className="text-[0.7rem] text-zinc-500">将语音翻译为英文</p>
 							</div>
 							<Switch 
 								checked={task === "translate"} 
 								onCheckedChange={(checked) => setTask(checked ? "translate" : "transcribe")}
 								disabled={model.includes("SenseVoice")}
+								className="data-[state=checked]:bg-white"
 							/>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
+
 
 			{loading && (
 				<Card>

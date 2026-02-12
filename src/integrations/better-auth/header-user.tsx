@@ -6,7 +6,7 @@ export default function BetterAuthHeader() {
 
   if (isPending) {
     return (
-      <div className="h-8 w-8 bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+      <div className="h-8 w-8 bg-muted animate-pulse" />
     )
   }
 
@@ -14,17 +14,17 @@ export default function BetterAuthHeader() {
     return (
       <div className="flex items-center gap-2">
         {session.user.image ? (
-          <img src={session.user.image} alt="" className="h-8 w-8" />
+          <img src={session.user.image} alt="" className="h-8 w-8 grayscale" />
         ) : (
-          <div className="h-8 w-8 bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
-            <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+          <div className="h-8 w-8 bg-accent flex items-center justify-center border border-border">
+            <span className="text-xs font-medium text-accent-foreground">
               {session.user.name?.charAt(0).toUpperCase() || 'U'}
             </span>
           </div>
         )}
         <button
           onClick={() => authClient.signOut()}
-          className="flex-1 h-9 px-4 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+          className="flex-1 h-9 px-4 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors uppercase tracking-widest"
         >
           Sign out
         </button>
@@ -35,7 +35,7 @@ export default function BetterAuthHeader() {
   return (
     <Link
       to="/demo/better-auth"
-      className="h-9 px-4 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-50 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors inline-flex items-center"
+      className="h-9 px-4 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors inline-flex items-center justify-center uppercase tracking-widest"
     >
       Sign in
     </Link>

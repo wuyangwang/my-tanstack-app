@@ -53,34 +53,34 @@ function DouyinTool() {
 	};
 
 	return (
-		<div className="container mx-auto max-w-4xl space-y-8 px-4 py-10">
-			<div className="flex flex-col items-center space-y-4 text-center">
-				<h1 className="bg-gradient-to-r from-red-500 to-pink-600 bg-clip-text font-extrabold text-4xl text-transparent tracking-tight lg:text-5xl">
+		<div className="container mx-auto max-w-4xl space-y-12 px-4 py-20">
+			<div className="flex flex-col items-center space-y-6 text-center">
+				<h1 className="font-black text-6xl text-white uppercase tracking-tighter lg:text-8xl">
 					抖音视频提取
 				</h1>
-				<p className="max-w-lg text-muted-foreground">
+				<p className="max-w-lg text-zinc-400 text-xl font-medium tracking-tight">
 					解析抖音分享链接，获取无水印和有水印视频地址。
 				</p>
 			</div>
 
-			<Card>
+			<Card className="bg-zinc-900 border-white/10 text-white">
 				<CardHeader>
-					<CardTitle>粘贴分享链接</CardTitle>
-					<CardDescription>
+					<CardTitle className="uppercase tracking-widest text-sm">粘贴分享链接</CardTitle>
+					<CardDescription className="text-zinc-500">
 						在此粘贴从抖音 App 复制的分享文本或链接
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">
 					<Textarea
-						placeholder="例如：6.92 p@y.pg 01/21 Vmu:/ 复制打开抖音，看看【九月的作品】白露  # 传统文化 # 节气 # 治愈系风景  https://v.douyin.com/iPxxxx/"
+						placeholder="例如：6.92 p@y.pg 01/21 Vmu:/ 复制打开抖音，看看【九月的作品】白露..."
 						value={shareText}
 						onChange={(e) => setShareText(e.target.value)}
-						className="min-h-[120px]"
+						className="min-h-[120px] bg-black border-white/10 text-white placeholder:text-zinc-700 focus-visible:ring-white"
 					/>
 					<Button
 						onClick={handleParse}
 						disabled={loading}
-						className="w-full bg-red-600 font-bold hover:bg-red-700"
+						className="w-full bg-white text-black font-bold hover:bg-zinc-200"
 					>
 						{loading ? "正在解析..." : "立即解析"}
 					</Button>

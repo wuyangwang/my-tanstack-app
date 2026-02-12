@@ -15,6 +15,7 @@
     "db:studio": "drizzle-kit studio",
     "format": "biome format",
     "lint": "biome lint",
+    "log": "pnpx wrangler tail",
     "check": "biome check"
   },
   "dependencies": {

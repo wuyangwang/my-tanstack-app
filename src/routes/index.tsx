@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
   Video,
+  Mic,
+  ArrowRight,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/')({ component: App })
@@ -8,59 +10,67 @@ export const Route = createFileRoute('/')({ component: App })
 function App() {
   const features = [
     {
-      icon: <Video className="w-12 h-12 text-cyan-400" />,
+      icon: <Video className="w-12 h-12 text-white" />,
       title: '抖音工具',
-      description: '抖音视频处理与分析工具',
+      description: '高效的抖音视频下载与分析工具。',
+      link: '/douyin-tool'
+    },
+    {
+      icon: <Mic className="w-12 h-12 text-white" />,
+      title: '语音转文字',
+      description: '基于 OpenAI Whisper 的高性能本地语音识别。',
+      link: '/speech-to-text'
     },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-      <section className="relative py-20 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10"></div>
+    <div className="min-h-screen bg-black text-white selection:bg-white selection:text-black">
+      <section className="relative py-32 px-6 text-center border-b border-white/10">
         <div className="relative max-w-5xl mx-auto">
-          <div className="flex items-center justify-center">
-            <h1 className="text-6xl md:text-7xl font-black text-white [letter-spacing:-0.08em]">
-              <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                抖音工具箱
-              </span>
+          <div className="flex items-center justify-center mb-6">
+            <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter">
+              工具箱
             </h1>
           </div>
-          <p className="text-2xl md:text-3xl text-gray-300 mb-4 font-light">
-            高效的视频处理与分析工具
-          </p>
-          <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-8">
-            基于 TanStack Start 构建的现代化应用
+          <p className="text-xl md:text-2xl text-zinc-400 mb-12 font-medium tracking-tight max-w-2xl mx-auto">
+            一系列高效、现代化的工具集合，旨在提升您的工作效率。
           </p>
           <div className="flex flex-col items-center gap-4">
             <Link
               to="/douyin-tool"
-              className="px-8 py-3 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-cyan-500/50"
+              className="group flex items-center gap-2 px-10 py-4 bg-white text-black font-bold rounded-full transition-all hover:scale-105 active:scale-95"
             >
-              开始使用
+              立刻开始
+              <ArrowRight className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="py-16 px-6 max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <h2 className="text-3xl font-bold mb-12 uppercase tracking-widest text-center">核心功能</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {features.map((feature, index) => (
-            <div
+            <Link
               key={index}
-              className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10"
+              to={feature.link}
+              className="group block bg-zinc-900 border border-white/10 rounded-2xl p-8 hover:bg-white hover:text-black transition-all duration-500"
             >
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold text-white mb-3">
+              <div className="mb-6 group-hover:invert transition-all duration-500">{feature.icon}</div>
+              <h3 className="text-2xl font-bold mb-4 uppercase tracking-tight">
                 {feature.title}
               </h3>
-              <p className="text-gray-400 leading-relaxed">
+              <p className="text-zinc-400 group-hover:text-zinc-800 leading-relaxed text-lg transition-colors">
                 {feature.description}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
+
+      <footer className="py-12 border-t border-white/10 text-center text-zinc-500 text-sm uppercase tracking-widest">
+        &copy; {new Date().getFullYear()} 工具箱. Built with TanStack Start.
+      </footer>
     </div>
   )
 }
