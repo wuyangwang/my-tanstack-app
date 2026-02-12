@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { useWorker } from "./use-worker";
