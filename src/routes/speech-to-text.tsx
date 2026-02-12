@@ -18,6 +18,8 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { exportToTxt, exportToJson } from "@/lib/audio-utils";
 import { useTranscription } from "@/hooks/use-transcription";
+import { useVConsole } from "@/hooks/use-log";
+
 
 export const Route = createFileRoute("/speech-to-text")({
 	component: SpeechToText,
@@ -43,6 +45,8 @@ function SpeechToText() {
 	const mediaRecorder = useRef<MediaRecorder | null>(null);
 	const audioChunks = useRef<Blob[]>([]);
 
+  useVConsole();
+  
 	const handleUrlProcess = async () => {
 		if (!audioUrl) {
 			toast.error("请输入音频 URL");
@@ -220,7 +224,7 @@ function SpeechToText() {
 									<SelectItem value="onnx-community/whisper-tiny">Whisper Tiny (极快)</SelectItem>
 									<SelectItem value="onnx-community/whisper-base">Whisper Base (中等)</SelectItem>
 									<SelectItem value="onnx-community/whisper-small">Whisper Small (准)</SelectItem>
-									<SelectItem value="onnx-community/whisper-large-v3-chinese-ONNX">Whisper Large V3 Chinese (最准)</SelectItem>
+									{/* <SelectItem value="onnx-community/whisper-large-v3-chinese-ONNX">Whisper Large V3 Chinese (最准)</SelectItem> */}
 								</SelectContent>
 							</Select>
 						</div>

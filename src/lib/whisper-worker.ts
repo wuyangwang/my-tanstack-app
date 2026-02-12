@@ -1,4 +1,4 @@
-import { pipeline, env } from '@huggingface/transformers';
+import { env, pipeline } from '@huggingface/transformers';
 
 // Skip local model check since we are in the browser
 env.allowLocalModels = false;
@@ -17,15 +17,25 @@ async function getTranscriber(model: string) {
     try {
       const adapter = await navigator.gpu.requestAdapter();
       if (adapter) {
-        device = 'webgpu';
+        // 核心检查：判断硬件是否支持 fp16
+        const supportsFp16 = adapter.features.has('shader-f16');
+        // if (supportsFp16) {
+        //   await adapter.requestDevice({
+        //     // 如果支持，必须在创建 device 时显式请求该特性
+        //     requiredFeatures: ['shader-f16'],
+        //   });
+        // }
+        if (supportsFp16) {
+          device = 'webgpu';
+        }
       }
     } catch (e) {
       console.warn('WebGPU not available, falling back to WASM', e);
     }
   }
-  
+
   self.postMessage({ status: 'init', message: `Initializing ${model} on ${device}...` });
-  
+
   // For Whisper, we use automatic-speech-recognition
   const taskType = 'automatic-speech-recognition';
 
@@ -39,19 +49,19 @@ async function getTranscriber(model: string) {
       });
     }
   });
-  
+
   self.postMessage({ status: 'ready', message: `Model loaded on ${device}` });
   return transcriber;
 }
 
 self.onmessage = async (event) => {
   const { audio, model, task, language } = event.data;
-  
+
   try {
     const p = await getTranscriber(model);
-    
+
     self.postMessage({ status: 'processing', message: 'Processing audio...' });
-    
+
     // Whisper standard ASR
     const result = await p(audio, {
       chunk_length_s: 30,
@@ -60,7 +70,7 @@ self.onmessage = async (event) => {
       language: language,
       return_timestamps: true,
     });
-    
+
     self.postMessage({ status: 'complete', result });
   } catch (error: any) {
     console.error('Worker error:', error);

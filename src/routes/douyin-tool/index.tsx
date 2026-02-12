@@ -52,6 +52,19 @@ function DouyinTool() {
 		toast.success("已复制到剪贴板");
 	};
 
+  // header中no-referrer
+  const onPreviewClick = (url: string) => {
+		window.open(url, "_blank", "noreferrer");
+	};
+
+  // 下载视频
+  const onDownloadClick = (result: DouyinVideoInfo,key:"wm_url"|"url") => {
+		const a = document.createElement("a");
+		a.href = result[key];
+		a.download = result.video_id + ".mp4";
+		a.click();
+	};
+
 	return (
 		<div className="container mx-auto max-w-4xl space-y-12 px-4 py-20">
 			<div className="flex flex-col items-center space-y-6 text-center">
@@ -123,12 +136,19 @@ function DouyinTool() {
 								<div className="space-y-2">
 									<p className="font-medium text-sm text-foreground">无水印视频</p>
 									<div className="flex gap-2">
+                    {/* <Button
+											variant="outline"
+											className="flex-1 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
+											onClick={() => onDownloadClick(result,"url")}
+										>
+											<ExternalLink className="mr-2 h-4 w-4" /> 下载视频
+										</Button> */}
 										<Button
 											variant="outline"
 											className="flex-1 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
-											onClick={() => window.open(result.url, "_blank")}
+											onClick={() => onPreviewClick(result.url,)}
 										>
-											<ExternalLink className="mr-2 h-4 w-4" /> 预览
+											<ExternalLink className="mr-2 h-4 w-4" /> 预览并下载
 										</Button>
 										<Button
 											variant="secondary"
@@ -142,12 +162,19 @@ function DouyinTool() {
 								<div className="space-y-2">
 									<p className="font-medium text-sm text-foreground">有水印视频</p>
 									<div className="flex gap-2">
+										{/* <Button
+											variant="outline"
+											className="flex-1 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
+											onClick={() => onDownloadClick(result,"wm_url")}
+										>
+											<ExternalLink className="mr-2 h-4 w-4" /> 下载视频
+										</Button> */}
 										<Button
 											variant="outline"
 											className="flex-1 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
-											onClick={() => window.open(result.wm_url, "_blank")}
+											onClick={() => onPreviewClick(result.wm_url)}
 										>
-											<ExternalLink className="mr-2 h-4 w-4" /> 预览
+											<ExternalLink className="mr-2 h-4 w-4" /> 预览并下载
 										</Button>
 										<Button
 											variant="secondary"

@@ -108,11 +108,11 @@ export default function Header() {
           </Link>
         </nav>
 
-        <div className="p-4 border-t border-border flex flex-col gap-2">
+        {/* <div className="p-4 border-t border-border flex flex-col gap-2">
           <BetterAuthHeader />
 
           <ParaglideLocaleSwitcher />
-        </div>
+        </div> */}
       </aside>
     </>
   )
