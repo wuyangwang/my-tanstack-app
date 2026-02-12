@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SpeechToTextRouteImport } from './routes/speech-to-text'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DouyinToolIndexRouteImport } from './routes/douyin-tool/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const SpeechToTextRoute = SpeechToTextRouteImport.update({
+  id: '/speech-to-text',
+  path: '/speech-to-text',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -37,12 +43,14 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool/': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
@@ -50,20 +58,33 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool/': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/douyin-tool/' | '/api/auth/$' | '/api/trpc/$'
+  fullPaths:
+    | '/'
+    | '/speech-to-text'
+    | '/douyin-tool/'
+    | '/api/auth/$'
+    | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/douyin-tool' | '/api/auth/$' | '/api/trpc/$'
-  id: '__root__' | '/' | '/douyin-tool/' | '/api/auth/$' | '/api/trpc/$'
+  to: '/' | '/speech-to-text' | '/douyin-tool' | '/api/auth/$' | '/api/trpc/$'
+  id:
+    | '__root__'
+    | '/'
+    | '/speech-to-text'
+    | '/douyin-tool/'
+    | '/api/auth/$'
+    | '/api/trpc/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SpeechToTextRoute: typeof SpeechToTextRoute
   DouyinToolIndexRoute: typeof DouyinToolIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
@@ -71,6 +92,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/speech-to-text': {
+      id: '/speech-to-text'
+      path: '/speech-to-text'
+      fullPath: '/speech-to-text'
+      preLoaderRoute: typeof SpeechToTextRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -104,6 +132,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SpeechToTextRoute: SpeechToTextRoute,
   DouyinToolIndexRoute: DouyinToolIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
