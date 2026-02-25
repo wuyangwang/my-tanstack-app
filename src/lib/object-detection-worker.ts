@@ -1,4 +1,4 @@
-import { env, AutoProcessor, AutoModel, RawImage, pipeline } from '@huggingface/transformers';
+import { env, RawImage, pipeline } from '@huggingface/transformers';
 import { checkWebGPU } from './webgpu';
 
 // Skip local model check since we are in the browser
