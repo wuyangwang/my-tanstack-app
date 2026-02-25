@@ -1,18 +1,16 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-const DEFAULT_OPTIONS: WorkerOptions = { type: 'module' };
-
-export function useWorker(url: URL, options: WorkerOptions = DEFAULT_OPTIONS) {
+export function useWorker(worker: Worker | null) {
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(url, options);
+    if (!worker) return;
     workerRef.current = worker;
 
     return () => {
       worker.terminate();
     };
-  }, [url, options]);
+  }, [worker]);
 
   const postMessage = useCallback((message: any, transfer?: Transferable[]) => {
     if (workerRef.current) {
