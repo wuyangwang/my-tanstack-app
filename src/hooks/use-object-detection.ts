@@ -19,7 +19,7 @@ export function useObjectDetection() {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [results, setResults] = useState<DetectionResult[]>([]);
   
-  const worker = useMemo(() => new Worker(new URL('../lib/object-detection-worker.ts', import.meta.url), { type: 'module' }), []);
+  const worker = useMemo(() => new Worker(new URL('../lib/object-detection-worker.ts?worker', import.meta.url), { type: 'module' }), []);
   const { postMessage, setOnMessage } = useWorker(worker);
 
   useEffect(() => {
