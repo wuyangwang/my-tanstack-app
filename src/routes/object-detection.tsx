@@ -289,18 +289,6 @@ function ObjectDetection() {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label className="text-xs">模型</Label>
-                                    <Select value={model} onValueChange={setModel}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="onnx-community/rfdetr_medium-ONNX">RF-DETR Medium</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
                                 {activeTab === "camera" ? (
                                     <Button 
                                         variant={isStreaming ? "destructive" : "default"} 

@@ -14,10 +14,6 @@ const config = defineConfig({
 			"@": fileURLToPath(new URL("./src", import.meta.url)),
 		},
 	},
-	worker: {
-		// 确保 worker 输出格式正确
-		format: 'es'
-	},
 	plugins: [
 		devtools(),
 		paraglideVitePlugin({
