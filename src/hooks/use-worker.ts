@@ -1,16 +1,18 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-export function useWorker() {
+const DEFAULT_OPTIONS: WorkerOptions = { type: 'module' };
+
+export function useWorker(url: URL, options: WorkerOptions = DEFAULT_OPTIONS) {
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
-    const worker = new Worker(new URL("../lib/whisper-worker.ts?worker", import.meta.url), { type: 'module' });
+    const worker = new Worker(url, options);
     workerRef.current = worker;
 
     return () => {
       worker.terminate();
     };
-  }, []);
+  }, [url, options]);
 
   const postMessage = useCallback((message: any, transfer?: Transferable[]) => {
     if (workerRef.current) {

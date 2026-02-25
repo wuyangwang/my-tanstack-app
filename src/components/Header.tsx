@@ -20,6 +20,7 @@ import {
   X,
   Video,
   Mic,
+  Scan,
 } from 'lucide-react'
 import { ModeToggle } from './ModeToggle'
 
@@ -105,6 +106,19 @@ export default function Header() {
           >
             <Mic size={20} />
             <span className="font-medium">语音转文字</span>
+          </Link>
+
+          <Link
+            to="/object-detection"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
+            activeProps={{
+              className:
+                'flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold',
+            }}
+          >
+            <Scan size={20} />
+            <span className="font-medium">实时目标检测</span>
           </Link>
         </nav>
 

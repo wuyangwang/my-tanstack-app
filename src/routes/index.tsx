@@ -3,6 +3,7 @@ import {
   Video,
   Mic,
   ArrowRight,
+  ScanSearch,
 } from 'lucide-react'
 
 export const Route = createFileRoute('/')({ component: App })
@@ -20,6 +21,12 @@ function App() {
       title: '语音转文字',
       description: '基于 OpenAI Whisper 的高性能本地语音识别。',
       link: '/speech-to-text'
+    },
+    {
+      icon: <ScanSearch className="w-12 h-12" />,
+      title: '目标检测',
+      description: '基于 RF-DETR 的本地实时目标检测，支持摄像头与图片。',
+      link: '/object-detection'
     },
   ]
 
@@ -49,7 +56,7 @@ function App() {
 
       <section className="py-24 px-6 max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold mb-12 uppercase tracking-widest text-center">核心功能</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <Link
               key={index}

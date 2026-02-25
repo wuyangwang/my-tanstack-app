@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpeechToTextRouteImport } from './routes/speech-to-text'
+import { Route as ObjectDetectionRouteImport } from './routes/object-detection'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DouyinToolIndexRouteImport } from './routes/douyin-tool/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
@@ -18,6 +19,11 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 const SpeechToTextRoute = SpeechToTextRouteImport.update({
   id: '/speech-to-text',
   path: '/speech-to-text',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObjectDetectionRoute = ObjectDetectionRouteImport.update({
+  id: '/object-detection',
+  path: '/object-detection',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -43,6 +49,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool/': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool/': typeof DouyinToolIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -67,15 +76,23 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/object-detection'
     | '/speech-to-text'
     | '/douyin-tool/'
     | '/api/auth/$'
     | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/speech-to-text' | '/douyin-tool' | '/api/auth/$' | '/api/trpc/$'
+  to:
+    | '/'
+    | '/object-detection'
+    | '/speech-to-text'
+    | '/douyin-tool'
+    | '/api/auth/$'
+    | '/api/trpc/$'
   id:
     | '__root__'
     | '/'
+    | '/object-detection'
     | '/speech-to-text'
     | '/douyin-tool/'
     | '/api/auth/$'
@@ -84,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ObjectDetectionRoute: typeof ObjectDetectionRoute
   SpeechToTextRoute: typeof SpeechToTextRoute
   DouyinToolIndexRoute: typeof DouyinToolIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -97,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/speech-to-text'
       fullPath: '/speech-to-text'
       preLoaderRoute: typeof SpeechToTextRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/object-detection': {
+      id: '/object-detection'
+      path: '/object-detection'
+      fullPath: '/object-detection'
+      preLoaderRoute: typeof ObjectDetectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -132,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ObjectDetectionRoute: ObjectDetectionRoute,
   SpeechToTextRoute: SpeechToTextRoute,
   DouyinToolIndexRoute: DouyinToolIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

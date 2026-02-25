@@ -24,7 +24,8 @@ export function useTranscription() {
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [result, setResult] = useState<TranscriptionResult | null>(null);
 
-  const { postMessage, setOnMessage } = useWorker();
+  const workerUrl = useMemo(() => new URL("../lib/whisper-worker.ts?worker", import.meta.url), []);
+  const { postMessage, setOnMessage } = useWorker(workerUrl);
 
   useEffect(() => {
     setOnMessage((e: MessageEvent) => {
