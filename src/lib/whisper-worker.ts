@@ -1,4 +1,5 @@
 import { env, pipeline } from '@huggingface/transformers';
+import { checkWebGPU } from './webgpu';
 
 // Skip local model check since we are in the browser
 env.allowLocalModels = false;
@@ -12,27 +13,8 @@ async function getTranscriber(model: string) {
   }
 
   // Check for WebGPU support
-  let device = 'wasm';
-  if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
-    try {
-      const adapter = await navigator.gpu.requestAdapter();
-      if (adapter) {
-        // 核心检查：判断硬件是否支持 fp16
-        const supportsFp16 = adapter.features.has('shader-f16');
-        // if (supportsFp16) {
-        //   await adapter.requestDevice({
-        //     // 如果支持，必须在创建 device 时显式请求该特性
-        //     requiredFeatures: ['shader-f16'],
-        //   });
-        // }
-        if (supportsFp16) {
-          device = 'webgpu';
-        }
-      }
-    } catch (e) {
-      console.warn('WebGPU not available, falling back to WASM', e);
-    }
-  }
+  const isWebGPUSupported = await checkWebGPU();
+  const device = isWebGPUSupported ? 'webgpu' : 'wasm';
 
   self.postMessage({ status: 'init', message: `Initializing ${model} on ${device}...` });
 
@@ -41,7 +23,7 @@ async function getTranscriber(model: string) {
 
   transcriber = await pipeline(taskType as any, model, {
     device: device as any,
-    dtype: device === 'webgpu' ? 'fp16' : 'fp32',
+    dtype: isWebGPUSupported ? 'fp16' : 'q8', // fp32
     progress_callback: (progress: any) => {
       self.postMessage({
         status: 'progress',
