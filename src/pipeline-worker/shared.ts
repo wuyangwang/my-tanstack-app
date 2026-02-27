@@ -23,7 +23,8 @@ export async function getPipeline(task: PipelineType, model: string, options: an
 
   const p = await pipeline(task, model, {
     device: device as any,
-    dtype: isWebGPUSupported ? 'fp16' : 'q8', // fall back to quantized if no webgpu
+    // fp32 fp16 q8
+    dtype: isWebGPUSupported ? 'q8' : 'q8', // fall back to quantized if no webgpu
     progress_callback: (progress: any) => {
       self.postMessage({
         status: 'progress',
