@@ -1,15 +1,14 @@
-import { env as onnxEnv } from 'onnxruntime-web';
 import { env, pipeline, type PipelineType } from '@huggingface/transformers';
 import { checkWebGPU } from '../lib/webgpu';
 
-onnxEnv.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0-dev.20250409-89f8206ba4/dist/';
-env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0-dev.20250409-89f8206ba4/dist/';
+// onnxEnv.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0-dev.20250409-89f8206ba4/dist/';
+// env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0-dev.20250409-89f8206ba4/dist/';
 
 // Skip local model check since we are in the browser
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
-console.log('---------env ',env, onnxEnv)
+console.log('---------env ',env)
 
 /**
  * Common configuration and pipeline initialization for Hugging Face Transformers.
