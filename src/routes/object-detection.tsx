@@ -184,7 +184,7 @@ function ObjectDetection() {
 					实时目标检测
 				</h1>
 				<p className="max-w-xl text-muted-foreground text-lg font-medium">
-					使用 RF-DETR 模型进行高效本地实时目标检测。
+					在浏览器中进行高效本地实时目标检测。
 					支持摄像头实时监控与本地图片识别。
 				</p>
 			</div>
@@ -274,6 +274,18 @@ function ObjectDetection() {
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="space-y-2">
+                                    <Label className="text-xs">模型</Label>
+                                    <Select value={model} onValueChange={setModel}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="选择一个模型" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="onnx-community/rfdetr_medium-ONNX">RF-DETR</SelectItem>
+                                            <SelectItem value="Xenova/detr-resnet-50">DETR ResNet-50</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
                                     <Label className="text-xs">检测阈值: {threshold.toFixed(2)}</Label>
                                     <Slider 
                                         value={[threshold]} 
@@ -342,7 +354,7 @@ function ObjectDetection() {
             </Tabs>
             
             <div className="text-center text-sm text-muted-foreground">
-                提示：RF-DETR 模型擅长处理复杂场景。您可以上传一张图片来测试模型的精准度。
+                提示：RF-DETR 模型擅长处理复杂场景，而 DETR ResNet-50 提供了另一种选择。您可以上传一张图片来测试模型的精准度。
             </div>
 		</div>
 	);
