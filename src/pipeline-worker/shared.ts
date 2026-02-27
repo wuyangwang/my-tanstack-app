@@ -1,9 +1,15 @@
+import { env as onnxEnv } from 'onnxruntime-web';
 import { env, pipeline, type PipelineType } from '@huggingface/transformers';
 import { checkWebGPU } from '../lib/webgpu';
+
+onnxEnv.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0-dev.20250409-89f8206ba4/dist/';
+env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0-dev.20250409-89f8206ba4/dist/';
 
 // Skip local model check since we are in the browser
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+
+console.log('---------env ',env, onnxEnv)
 
 /**
  * Common configuration and pipeline initialization for Hugging Face Transformers.
@@ -12,6 +18,7 @@ export async function getPipeline(task: PipelineType, model: string, options: an
   // Check for WebGPU support
   const isWebGPUSupported = await checkWebGPU();
   const device = isWebGPUSupported ? 'webgpu' : 'wasm';
+  console.log('isWebGPUSupported', isWebGPUSupported)
 
   self.postMessage({ status: 'init', message: `Initializing ${model} on ${device}...` });
 
