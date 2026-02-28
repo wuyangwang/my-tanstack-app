@@ -48,7 +48,7 @@ export function useObjectDetection() {
     });
   }, [setOnMessage]);
 
-  const detect = useCallback(async (image: ImageBitmap, threshold = 0.5) => {
+  const detect = useCallback(async (image: string, threshold = 0.5) => {
     postMessage({
       image,
       model,

@@ -85,9 +85,8 @@ function ObjectDetection() {
     const processStaticImage = async (url: string) => {
         if (!url || url !== selectedImage || !staticImageRef.current) return;
         try {
-            // Use the ref directly since it's already loaded the url
-            const imageBitmap = await createImageBitmap(staticImageRef.current);
-            await detect(imageBitmap, threshold);
+            // const imageBitmap = await createImageBitmap(url);
+            await detect(url, threshold);
         } catch (err) {
             console.error("Detection error:", err);
             toast.error("识别图片失败");
