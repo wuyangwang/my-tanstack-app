@@ -1,0 +1,20 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "home_page": "首页",
+  "about_page": "关于页",
+  "example_message": "欢迎来到您的 i18n 应用。",
+  "language_label": "语言",
+  "current_locale": "当前语言: {locale}",
+  "learn_router": "学习 Paraglide JS",
+  "toolbox": "工具箱",
+  "toolbox_description": "一系列高效、现代化的工具集合，旨在提升您的工作效率。",
+  "start_now": "立刻开始",
+  "core_features": "核心功能",
+  "douyin_tool": "抖音工具",
+  "douyin_tool_description": "高效的抖音视频下载与分析工具。",
+  "speech_to_text": "语音转文字",
+  "speech_to_text_description": "基于 OpenAI Whisper 的高性能本地语音识别。",
+  "object_detection": "目标检测",
+  "object_detection_description": "基于 RF-DETR 的本地实时目标检测，支持摄像头与图片。",
+  "footer_built_with": "由 TanStack Start 构建。"
+}

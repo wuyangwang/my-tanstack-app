@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ScanSearch,
 } from 'lucide-react'
+import * as m from '@/paraglide/messages'
 
 export const Route = createFileRoute('/')({ component: App })
 
@@ -12,20 +13,20 @@ function App() {
   const features = [
     {
       icon: <Video className="w-12 h-12" />,
-      title: '抖音工具',
-      description: '高效的抖音视频下载与分析工具。',
+      title: m.douyin_tool(),
+      description: m.douyin_tool_description(),
       link: '/douyin-tool'
     },
     {
       icon: <Mic className="w-12 h-12" />,
-      title: '语音转文字',
-      description: '基于 OpenAI Whisper 的高性能本地语音识别。',
+      title: m.speech_to_text(),
+      description: m.speech_to_text_description(),
       link: '/speech-to-text'
     },
     {
       icon: <ScanSearch className="w-12 h-12" />,
-      title: '目标检测',
-      description: '基于 RF-DETR 的本地实时目标检测，支持摄像头与图片。',
+      title: m.object_detection(),
+      description: m.object_detection_description(),
       link: '/object-detection'
     },
   ]
@@ -36,18 +37,18 @@ function App() {
         <div className="relative max-w-5xl mx-auto">
           <div className="flex items-center justify-center mb-6">
             <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-primary">
-              工具箱
+              {m.toolbox()}
             </h1>
           </div>
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 font-medium tracking-tight max-w-2xl mx-auto">
-            一系列高效、现代化的工具集合，旨在提升您的工作效率。
+            {m.toolbox_description()}
           </p>
           <div className="flex flex-col items-center gap-4">
             <Link
               to="/douyin-tool"
               className="group flex items-center gap-2 px-10 py-4 bg-primary text-primary-foreground font-bold rounded-full transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
             >
-              立刻开始
+              {m.start_now()}
               <ArrowRight className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -55,7 +56,7 @@ function App() {
       </section>
 
       <section className="py-24 px-6 max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold mb-12 uppercase tracking-widest text-center">核心功能</h2>
+        <h2 className="text-3xl font-bold mb-12 uppercase tracking-widest text-center">{m.core_features()}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <Link
@@ -76,7 +77,7 @@ function App() {
       </section>
 
       <footer className="py-12 border-t border-border text-center text-muted-foreground text-sm uppercase tracking-widest">
-        &copy; {new Date().getFullYear()} 工具箱. Built with TanStack Start.
+        &copy; {new Date().getFullYear()} {m.toolbox()}. {m.footer_built_with()}
       </footer>
     </div>
   )

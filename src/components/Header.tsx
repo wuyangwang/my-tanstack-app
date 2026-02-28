@@ -23,6 +23,7 @@ import {
   Scan,
 } from 'lucide-react'
 import { ModeToggle } from './ModeToggle'
+import * as m from '@/paraglide/messages'
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -43,11 +44,12 @@ export default function Header() {
           </button>
           <h1 className="ml-4 text-xl font-bold uppercase tracking-wider text-primary">
             <Link to="/">
-              工具箱
+              {m.toolbox()}
             </Link>
           </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <ParaglideLocaleSwitcher />
           <ModeToggle />
         </div>
       </header>
@@ -58,7 +60,7 @@ export default function Header() {
         }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-xl font-bold uppercase tracking-widest text-primary">导航</h2>
+          <h2 className="text-xl font-bold uppercase tracking-widest text-primary">{m.home_page()}</h2>
           <button
             onClick={() => setIsOpen(false)}
             className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
@@ -79,7 +81,7 @@ export default function Header() {
             }}
           >
             <Home size={20} />
-            <span className="font-medium">首页</span>
+            <span className="font-medium">{m.home_page()}</span>
           </Link>
 
           <Link
@@ -92,7 +94,7 @@ export default function Header() {
             }}
           >
             <Video size={20} />
-            <span className="font-medium">抖音工具</span>
+            <span className="font-medium">{m.douyin_tool()}</span>
           </Link>
 
           <Link
@@ -105,7 +107,7 @@ export default function Header() {
             }}
           >
             <Mic size={20} />
-            <span className="font-medium">语音转文字</span>
+            <span className="font-medium">{m.speech_to_text()}</span>
           </Link>
 
           <Link
@@ -118,15 +120,13 @@ export default function Header() {
             }}
           >
             <Scan size={20} />
-            <span className="font-medium">实时目标检测</span>
+            <span className="font-medium">{m.object_detection()}</span>
           </Link>
         </nav>
 
-        {/* <div className="p-4 border-t border-border flex flex-col gap-2">
+        <div className="p-4 border-t border-border flex flex-col gap-2">
           <BetterAuthHeader />
-
-          <ParaglideLocaleSwitcher />
-        </div> */}
+        </div>
       </aside>
     </>
   )
