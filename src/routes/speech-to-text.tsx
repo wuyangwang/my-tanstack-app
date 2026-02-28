@@ -226,6 +226,7 @@ function SpeechToText() {
 									<SelectItem value="onnx-community/whisper-small">Whisper Small (准)</SelectItem>
 									<SelectItem value="onnx-community/whisper-large-v3-chinese-ONNX">Whisper Large V3 Chinese (最准)</SelectItem>
 									<SelectItem value="onnx-community/moonshine-tiny-zh-ONNX">moonshine-tiny-zh</SelectItem>
+									<SelectItem value="onnx-community/moonshine-base-zh-ONNX">moonshine-base-zh</SelectItem>
 									<SelectItem value="onnx-community/ipa-whisper-base-ONNX">Whipser-base</SelectItem>
 									<SelectItem value="willopcbeta/whisper-large-v3-turbo-ONNX">Whisper-large-v3</SelectItem>
 								</SelectContent>
