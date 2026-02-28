@@ -48,12 +48,13 @@ export function useObjectDetection() {
     });
   }, [setOnMessage]);
 
-  const detect = useCallback(async (image: string, threshold = 0.5) => {
+  const detect = useCallback(async (image: string | ImageBitmap, threshold = 0.5) => {
+    const transfer = (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) ? [image] : [];
     postMessage({
       image,
       model,
       threshold
-    }, [image]);
+    }, transfer);
   }, [postMessage, model]);
 
   return {
@@ -63,6 +64,7 @@ export function useObjectDetection() {
     loading,
     status,
     progress,
-    results
+    results,
+    setResults
   };
 }

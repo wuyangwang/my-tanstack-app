@@ -30,7 +30,8 @@ function ObjectDetection() {
 		loading,
 		status,
 		progress,
-		results
+		results,
+		setResults
 	} = useObjectDetection();
 
 	const [isStreaming, setIsStreaming] = useState(false);
@@ -78,7 +79,7 @@ function ObjectDetection() {
         if (file) {
             const url = URL.createObjectURL(file);
             setSelectedImage(url);
-            // 自动触发一次识别将在图片加载完成后通过 onLoad 触发
+            setResults([]); // 选择新图片时清除之前的结果
         }
     };
 
@@ -238,7 +239,6 @@ function ObjectDetection() {
                                     ref={staticImageRef} 
                                     src={selectedImage} 
                                     className="w-full h-full object-contain"
-                                    onLoad={() => processStaticImage(selectedImage)}
                                 />
                             )}
                         </TabsContent>
@@ -292,12 +292,7 @@ function ObjectDetection() {
                                         min={0.1} 
                                         max={0.9} 
                                         step={0.05} 
-                                        onValueChange={(v) => {
-                                            setThreshold(v[0]);
-                                            if (activeTab === "image" && selectedImage) {
-                                                processStaticImage(selectedImage);
-                                            }
-                                        }}
+                                        onValueChange={(v) => setThreshold(v[0])}
                                     />
                                 </div>
 
@@ -315,16 +310,25 @@ function ObjectDetection() {
                                         )}
                                     </Button>
                                 ) : (
-                                    <div className="relative">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            onChange={handleImageUpload} 
-                                            className="absolute inset-0 opacity-0 cursor-pointer" 
-                                        />
-                                        <Button variant="outline" className="w-full font-bold">
-                                            更换图片
+                                    <div className="flex flex-col gap-2">
+                                        <Button 
+                                            className="w-full font-bold"
+                                            onClick={() => selectedImage && processStaticImage(selectedImage)}
+                                            disabled={loading || !selectedImage}
+                                        >
+                                            <Play className="mr-2 h-4 w-4" /> 立即检测
                                         </Button>
+                                        <div className="relative">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                onChange={handleImageUpload} 
+                                                className="absolute inset-0 opacity-0 cursor-pointer" 
+                                            />
+                                            <Button variant="outline" className="w-full font-bold">
+                                                <ImageIcon className="mr-2 h-4 w-4" /> 更换图片
+                                            </Button>
+                                        </div>
                                     </div>
                                 )}
                             </CardContent>
