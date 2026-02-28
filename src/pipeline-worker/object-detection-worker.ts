@@ -14,11 +14,14 @@ async function getDetector(model: string) {
 
 self.onmessage = async (event) => {
   const { image, model, threshold } = event.data;
+  if (!image) return;
 
   try {
     const p = await getDetector(model);
 
     // image is expected to be an ImageBitmap or similar that RawImage can handle
+    // If it fails with "undefined type", it might be a TS error or an issue with the static method call.
+    // In v3, RawImage.read is the recommended way.
     const rawImage = await RawImage.read(image);
     
     const result = await p(rawImage, {

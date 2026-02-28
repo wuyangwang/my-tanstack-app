@@ -78,17 +78,18 @@ function ObjectDetection() {
         if (file) {
             const url = URL.createObjectURL(file);
             setSelectedImage(url);
-            // 自动触发一次识别
-            setTimeout(() => processStaticImage(url), 100);
+            // 自动触发一次识别将在图片加载完成后通过 onLoad 触发
         }
     };
 
     const processStaticImage = async (url: string) => {
-        if (!staticImageRef.current) return;
+        if (!url || url !== selectedImage || !staticImageRef.current) return;
         try {
+            // Use the ref directly since it's already loaded the url
             const imageBitmap = await createImageBitmap(staticImageRef.current);
             await detect(imageBitmap, threshold);
         } catch (err) {
+            console.error("Detection error:", err);
             toast.error("识别图片失败");
         }
     };
