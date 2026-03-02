@@ -4,7 +4,7 @@ import { Upload, Download, Loader2, Image as ImageIcon, Play, Disc, Trash2 } fro
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { extractLivePhoto, revokeLivePhotoUrls, type LivePhotoResult } from '@/lib/live-photo-parser'
+import { parseLivePhoto } from '@/lib/live-photo-parser'
 
 export const Route = createFileRoute('/live-photo-tool')({
   component: LivePhotoTool,
@@ -12,8 +12,8 @@ export const Route = createFileRoute('/live-photo-tool')({
 
 function LivePhotoTool() {
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<LivePhotoResult | null>(null)
   const [isHovering, setIsHovering] = useState(false)
+  const [result, setResult] = useState<any>()
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,10 +22,18 @@ function LivePhotoTool() {
 
     setLoading(true)
     try {
-      if (result) revokeLivePhotoUrls(result)
-      const data = await extractLivePhoto(file)
-      setResult(data)
-      toast.success(data.videoUrl ? 'Live Photo 解析成功' : '图片读取成功')
+      const { imagePreviewUrl, imageBlob, videoBlob, play } = await parseLivePhoto(file)
+      
+      const videoUrl = videoBlob ? URL.createObjectURL(videoBlob) : undefined
+
+      setResult({
+        imagePreviewUrl,
+        imageBlob: imageBlob || undefined,
+        videoUrl,
+        videoBlob: videoBlob || undefined,
+        play
+      })
+      toast.success(videoBlob ? 'Live Photo 解析成功' : '图片读取成功')
     } catch (err: any) {
       console.error(err)
       toast.error(`解析失败: ${err.message || '该文件解析出错'}`)
@@ -46,16 +54,21 @@ function LivePhotoTool() {
   useEffect(() => {
     if (isHovering && videoRef.current && result?.videoUrl) {
       videoRef.current.play().catch(console.error)
+      // Call play() to log or handle mediabunny track if needed
+      result.play().catch(console.error)
     } else if (videoRef.current) {
       videoRef.current.pause()
       videoRef.current.currentTime = 0
     }
-  }, [isHovering, result?.videoUrl])
+  }, [isHovering, result])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (result) revokeLivePhotoUrls(result)
+      if (result) {
+        URL.revokeObjectURL(result.imagePreviewUrl)
+        if (result.videoUrl) URL.revokeObjectURL(result.videoUrl)
+      }
     }
   }, [result])
 
