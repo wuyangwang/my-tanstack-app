@@ -16,5 +16,7 @@
   "speech_to_text_description": "基于 OpenAI Whisper 的高性能本地语音识别。",
   "object_detection": "目标检测",
   "object_detection_description": "基于 RF-DETR 的本地实时目标检测，支持摄像头与图片。",
+  "live_photo_tool": "Live Photo 解析",
+  "live_photo_tool_description": "解析 Apple Live Photo (HEIF/HEIC)，提取静态图片与视频。",
   "footer_built_with": "由 TanStack Start 构建。"
 }

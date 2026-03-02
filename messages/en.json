@@ -16,5 +16,7 @@
   "speech_to_text_description": "High-performance local speech recognition based on OpenAI Whisper.",
   "object_detection": "Object Detection",
   "object_detection_description": "Local real-time object detection based on RF-DETR, supporting camera and images.",
+  "live_photo_tool": "Live Photo Parser",
+  "live_photo_tool_description": "Parse Apple Live Photos (HEIF/HEIC) and extract static images and videos.",
   "footer_built_with": "Built with TanStack Start."
 }

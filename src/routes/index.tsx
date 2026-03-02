@@ -4,6 +4,7 @@ import {
   Mic,
   ArrowRight,
   ScanSearch,
+  Disc,
 } from 'lucide-react'
 import * as m from '@/paraglide/messages'
 
@@ -28,6 +29,12 @@ function App() {
       title: m.object_detection(),
       description: m.object_detection_description(),
       link: '/object-detection'
+    },
+    {
+      icon: <Disc className="w-12 h-12" />,
+      title: m.live_photo_tool(),
+      description: m.live_photo_tool_description(),
+      link: '/live-photo-tool'
     },
   ]
 
@@ -57,7 +64,7 @@ function App() {
 
       <section className="py-24 px-6 max-w-7xl mx-auto">
         <h2 className="text-3xl font-bold mb-12 uppercase tracking-widest text-center">{m.core_features()}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
             <Link
               key={index}

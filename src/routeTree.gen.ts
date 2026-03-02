@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpeechToTextRouteImport } from './routes/speech-to-text'
 import { Route as ObjectDetectionRouteImport } from './routes/object-detection'
+import { Route as LivePhotoToolRouteImport } from './routes/live-photo-tool'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DouyinToolIndexRouteImport } from './routes/douyin-tool/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
@@ -24,6 +25,11 @@ const SpeechToTextRoute = SpeechToTextRouteImport.update({
 const ObjectDetectionRoute = ObjectDetectionRouteImport.update({
   id: '/object-detection',
   path: '/object-detection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LivePhotoToolRoute = LivePhotoToolRouteImport.update({
+  id: '/live-photo-tool',
+  path: '/live-photo-tool',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +55,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool/': typeof DouyinToolIndexRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool': typeof DouyinToolIndexRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool/': typeof DouyinToolIndexRoute
@@ -76,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
     | '/douyin-tool/'
@@ -84,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
     | '/douyin-tool'
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
     | '/douyin-tool/'
@@ -101,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LivePhotoToolRoute: typeof LivePhotoToolRoute
   ObjectDetectionRoute: typeof ObjectDetectionRoute
   SpeechToTextRoute: typeof SpeechToTextRoute
   DouyinToolIndexRoute: typeof DouyinToolIndexRoute
@@ -122,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/object-detection'
       fullPath: '/object-detection'
       preLoaderRoute: typeof ObjectDetectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/live-photo-tool': {
+      id: '/live-photo-tool'
+      path: '/live-photo-tool'
+      fullPath: '/live-photo-tool'
+      preLoaderRoute: typeof LivePhotoToolRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -157,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LivePhotoToolRoute: LivePhotoToolRoute,
   ObjectDetectionRoute: ObjectDetectionRoute,
   SpeechToTextRoute: SpeechToTextRoute,
   DouyinToolIndexRoute: DouyinToolIndexRoute,
