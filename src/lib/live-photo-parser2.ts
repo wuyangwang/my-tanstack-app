@@ -1,95 +1,146 @@
+// import { Recorder, VideoFrame } from 'mediabunny';
+
 /**
- *  * 增强型 HEIC 解析：自动识别 Codec 并修正 Description
- *   */
+ * 结构化 Box 信息
+ */
+interface Box {
+	type: string;
+	start: number;
+	size: number;
+	data: Uint8Array;
+}
+
+/**
+ * 终极 HEIC 解析与合成函数
+ * @param buffer HEIC 文件的 ArrayBuffer
+ */
 export async function parseHeicDirectly(buffer: ArrayBuffer) {
 	const u8 = new Uint8Array(buffer);
 	const view = new DataView(buffer);
 
-	let metaOffset = -1,
-		mdatOffset = -1,
-		videoFtypPos = -1;
-	let i = 0;
-	while (i < u8.length) {
-		if (i + 8 > u8.length) break;
-		const size = view.getUint32(i);
-		const type = String.fromCharCode(...u8.subarray(i + 4, i + 8));
-		if (type === "meta") metaOffset = i;
-		if (type === "mdat") mdatOffset = i;
-		if (type === "ftyp" && i > 0) videoFtypPos = i;
+	// 1. 扫描顶级 Box
+	const boxes: Box[] = [];
+	let offset = 0;
+	while (offset < u8.length) {
+		if (offset + 8 > u8.length) break;
+		const size = view.getUint32(offset);
+		const type = String.fromCharCode(...u8.subarray(offset + 4, offset + 8));
+		boxes.push({
+			type,
+			start: offset,
+			size,
+			data: u8.subarray(offset + 8, offset + size),
+		});
 		if (size <= 0) break;
-		i += size;
+		offset += size;
 	}
 
-	if (metaOffset === -1 || mdatOffset === -1) throw new Error("Invalid HEIC");
+	// 2. 基础验证与定位
+	const ftypBox = boxes.find((b) => b.type === "ftyp");
+	if (!ftypBox) throw new Error("Not a valid ISOBMFF file");
 
-	// 1. 精确寻找 hvcC 并解析 Codec 字符串
-	const hvcCStart = findPattern(u8, [0x68, 0x76, 0x63, 0x43], metaOffset);
-	if (hvcCStart === -1) throw new Error("hvcC missing");
+	const metaBox = boxes.find((b) => b.type === "meta");
+	const mdatBox = boxes.find((b) => b.type === "mdat");
+	const moovBox = boxes.find((b) => b.type === "moov");
 
-	const hvcCSize = view.getUint32(hvcCStart - 4);
-	// WebCodecs 需要的 description 是去掉 Box Header (8字节) 后的纯数据
-	const description = u8.subarray(hvcCStart + 4, hvcCStart + hvcCSize - 4);
+	console.log("--------", boxes);
+	if (!metaBox || !mdatBox)
+		throw new Error("Missing essential HEIC boxes (meta/mdat)");
 
-	/**
-	 * 自动生成 Codec 字符串 (hvc1.x.x.Lxx.B0)
-	 * 从 hvcC 的第 1-12 字节提取 Profile, Tier, Level
-	 */
-	const getCodecString = (desc: Uint8Array) => {
-		const profileIdc = desc[1];
-		const tier = desc[2] & 0x20 ? "H" : "L";
-		const levelIdc = desc[12];
-		// 常见的如 hvc1.1.6.L93.B0
-		return `hvc1.${profileIdc}.6.${tier}${levelIdc}.B0`;
-	};
+	// 3. 提取 hvcC 配置并生成动态 Codec 字符串
+	const metaContent = metaBox.data.subarray(4); // Skip FullBox flags
+	const hvcCPos = findPattern(metaContent, [0x68, 0x76, 0x63, 0x43]); // 'hvcC'
+	const hvcCSize = new DataView(
+		metaContent.buffer,
+		metaContent.byteOffset + hvcCPos - 4,
+	).getUint32(0);
+	const description = metaContent.subarray(hvcCPos + 4, hvcCPos + hvcCSize - 4);
 
-	const codec = getCodecString(description);
-	console.log("Detected Codec:", codec);
+	// 核心补丁：自动识别 Tier (H/L) 和 Level，防止 EncodingError
+	const codec = `hvc1.${description[1]}.6.${description[2] & 0x20 ? "H" : "L"}${description[12]}.B0`;
 
-	// 2. 硬件解码
-	const photoBlob = await new Promise<Blob>((resolve, reject) => {
-		const canvas = new OffscreenCanvas(1, 1);
+	// 4. 解码所有图片帧
+	const decodedFrames = [];
+	await new Promise((resolve, reject) => {
 		const decoder = new VideoDecoder({
-			output: async (frame) => {
-				canvas.width = frame.displayWidth;
-				canvas.height = frame.displayHeight;
-				canvas.getContext("2d")!.drawImage(frame, 0, 0);
+			output: (frame) => {
+				decodedFrames.push(frame.clone()); // 克隆以供后续编码使用
 				frame.close();
-				resolve(
-					await canvas.convertToBlob({ type: "image/jpeg", quality: 0.95 }),
-				);
 			},
-			error: (e) => reject(e),
+			error: reject,
 		});
 
-		try {
-			decoder.configure({
-				codec: codec,
-				description: description,
-				hardwareAcceleration: "prefer-hardware",
-			});
+		decoder.configure({
+			codec,
+			description,
+			hardwareAcceleration: "prefer-hardware",
+		});
 
-			// 3. 定位 mdat 内部数据起始位置
-			// 有些 HEIC 在 mdat type 后还有 4 字节的保留位，这里跳过 8 字节 header
-			const dataStart = mdatOffset + 8;
-			const dataEnd = videoFtypPos > 0 ? videoFtypPos : u8.length;
+		// 处理 mdat 中的多帧 (HEIF 序列通常是 [4字节长度][数据] 循环)
+		let p = 8; // Skip mdat header
+		const mdatU8 = mdatBox.data;
+		const mdatView = new DataView(
+			mdatU8.buffer,
+			mdatU8.byteOffset,
+			mdatU8.byteLength,
+		);
+
+		while (p < mdatU8.length) {
+			if (p + 4 > mdatU8.length) break;
+			const naluSize = mdatView.getUint32(p);
+			if (p + 4 + naluSize > mdatU8.length) break;
 
 			decoder.decode(
 				new EncodedVideoChunk({
 					type: "key",
-					timestamp: 0,
-					data: u8.subarray(dataStart, dataEnd),
+					timestamp: decodedFrames.length * 100000, // 默认 10fps
+					data: mdatU8.subarray(p + 4, p + 4 + naluSize),
 				}),
 			);
-			decoder.flush();
-		} catch (err) {
-			reject(err);
+			p += 4 + naluSize;
 		}
+		decoder.flush().then(resolve).catch(reject);
 	});
 
-	const videoBlob =
-		videoFtypPos > 0
-			? new Blob([u8.subarray(videoFtypPos - 4)], { type: "video/mp4" })
-			: null;
+	if (decodedFrames.length === 0) throw new Error("No frames decoded");
+
+	// 5. 生成首帧预览图 (封面)
+	const canvas = new OffscreenCanvas(
+		decodedFrames[0].displayWidth,
+		decodedFrames[0].displayHeight,
+	);
+	const ctx = canvas.getContext("2d")!;
+	ctx.drawImage(decodedFrames[0], 0, 0);
+	const photoBlob = await canvas.convertToBlob({
+		type: "image/jpeg",
+		quality: 0.9,
+	});
+
+	// 6. 处理视频部分
+	let videoBlob: Blob | null = null;
+
+	// A 方案：原生实况照片提取 (Live Photo)
+	if (moovBox) {
+		videoBlob = new Blob([u8.subarray(moovBox.start - 4)], {
+			type: "video/mp4",
+		});
+	}
+	// B 方案：多帧序列合成视频 (Sequence)
+	else if (decodedFrames.length > 1) {
+		//  const recorder = new Recorder({
+		//  width: decodedFrames[0].displayWidth,
+		//      height: decodedFrames[0].displayHeight,
+		//          fps: 10,
+		//	          codec: 'avc1.42E01E' // 强兼容性 H.264
+		//		      });
+		//		          for (const frame of decodedFrames) {
+		//				        await recorder.write(frame);
+		//					    }
+		//					    videoBlob = await recorder.stop();
+	}
+
+	// 清理内存
+	decodedFrames.forEach((f) => f.close());
 
 	return {
 		photoBlob,
@@ -99,12 +150,11 @@ export async function parseHeicDirectly(buffer: ArrayBuffer) {
 	};
 }
 
-function findPattern(
-	data: Uint8Array,
-	pattern: number[],
-	start: number,
-): number {
-	for (let i = start; i < data.length - pattern.length; i++) {
+/**
+ * 辅助：字节搜索
+ */
+function findPattern(data: Uint8Array, pattern: number[]): number {
+	for (let i = 0; i < data.length - pattern.length; i++) {
 		if (pattern.every((b, j) => data[i + j] === b)) return i;
 	}
 	return -1;
