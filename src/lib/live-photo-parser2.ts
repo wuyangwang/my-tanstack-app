@@ -1,4 +1,4 @@
-// import { Recorder, VideoFrame } from 'mediabunny';
+import {MP4, Input, BlobSource } from 'mediabunny';
 
 /**
  * 结构化 Box 信息
@@ -14,7 +14,13 @@ interface Box {
  * 终极 HEIC 解析与合成函数
  * @param buffer HEIC 文件的 ArrayBuffer
  */
-export async function parseHeicDirectly(buffer: ArrayBuffer) {
+export async function parseHeicDirectly(buffer: ArrayBuffer,file: File) {
+	const input = new Input({
+		    source: new BlobSource(file), // Reading from disk
+		        formats: [MP4],
+	});
+	console.log('-------input',input)
+
 	const u8 = new Uint8Array(buffer);
 	const view = new DataView(buffer);
 

@@ -23,7 +23,7 @@ function LivePhotoTool() {
     setLoading(true)
     try {
       const buffer = await file.arrayBuffer()
-      const { photoUrl, photoBlob, videoUrl, videoBlob } = await parseHeicDirectly(buffer)
+      const { photoUrl, photoBlob, videoUrl, videoBlob } = await parseHeicDirectly(buffer, file)
 
       setResult({
         imagePreviewUrl: photoUrl,
