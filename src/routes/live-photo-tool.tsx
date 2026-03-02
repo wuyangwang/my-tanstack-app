@@ -4,7 +4,7 @@ import { Upload, Download, Loader2, Image as ImageIcon, Play, Disc, Trash2 } fro
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { parseLivePhoto } from '@/lib/live-photo-parser'
+import { parseHeicDirectly } from '@/lib/live-photo-parser2'
 
 export const Route = createFileRoute('/live-photo-tool')({
   component: LivePhotoTool,
@@ -22,16 +22,14 @@ function LivePhotoTool() {
 
     setLoading(true)
     try {
-      const { imagePreviewUrl, imageBlob, videoBlob, play } = await parseLivePhoto(file)
-      
-      const videoUrl = videoBlob ? URL.createObjectURL(videoBlob) : undefined
+      const buffer = await file.arrayBuffer()
+      const { photoUrl, photoBlob, videoUrl, videoBlob } = await parseHeicDirectly(buffer)
 
       setResult({
-        imagePreviewUrl,
-        imageBlob: imageBlob || undefined,
-        videoUrl,
+        imagePreviewUrl: photoUrl,
+        imageBlob: photoBlob,
+        videoUrl: videoUrl || undefined,
         videoBlob: videoBlob || undefined,
-        play
       })
       toast.success(videoBlob ? 'Live Photo 解析成功' : '图片读取成功')
     } catch (err: any) {
@@ -54,8 +52,6 @@ function LivePhotoTool() {
   useEffect(() => {
     if (isHovering && videoRef.current && result?.videoUrl) {
       videoRef.current.play().catch(console.error)
-      // Call play() to log or handle mediabunny track if needed
-      result.play().catch(console.error)
     } else if (videoRef.current) {
       videoRef.current.pause()
       videoRef.current.currentTime = 0
@@ -168,9 +164,9 @@ function LivePhotoTool() {
                   <Button 
                     variant="secondary" 
                     className="rounded-full font-bold shadow-xl backdrop-blur-md bg-white/20 hover:bg-white/30 text-white border-none"
-                    onClick={() => downloadFile(result.imageBlob, 'image.png')}
+                    onClick={() => downloadFile(result.imageBlob, 'image.jpg')}
                   >
-                    <Download className="mr-2 h-4 w-4" /> {result.videoUrl ? 'PNG' : '下载'}
+                    <Download className="mr-2 h-4 w-4" /> {result.videoUrl ? 'JPG' : '下载'}
                   </Button>
                   {result.videoBlob && (
                     <Button 
