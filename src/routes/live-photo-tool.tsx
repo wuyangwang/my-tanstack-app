@@ -134,6 +134,23 @@ function LivePhotoTool() {
                   loop
                   muted
                   playsInline
+                  onLoadedMetadata={(e) => {
+                    const video = e.currentTarget
+                    console.info("[live-photo-tool] video metadata loaded", {
+                      duration: video.duration,
+                      width: video.videoWidth,
+                      height: video.videoHeight,
+                      currentSrc: video.currentSrc,
+                    })
+                  }}
+                  onError={(e) => {
+                    const video = e.currentTarget
+                    console.error("[live-photo-tool] video playback error", {
+                      code: video.error?.code,
+                      message: video.error?.message,
+                      currentSrc: video.currentSrc,
+                    })
+                  }}
                   className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ease-in-out ${isHovering ? 'opacity-100' : 'opacity-0'}`}
                 />
               )}

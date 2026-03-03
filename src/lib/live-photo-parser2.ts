@@ -1,10 +1,3 @@
-interface Box {
-	type: string;
-	start: number;
-	size: number;
-	headerSize: number;
-}
-
 interface ParsedLivePhoto {
 	photoBlob: Blob;
 	photoUrl: string;
@@ -12,19 +5,38 @@ interface ParsedLivePhoto {
 	videoUrl: string | null;
 }
 
+const LOG_TAG = "[live-photo-parser2]";
+
 /**
- * Parse HEIC/Live Photo payload, split photo/video payload, and produce a displayable image blob.
+ * Parse HEIC/Live Photo payload and split image/video payload.
+ * Image is decoded to JPEG via WASM (heic2any) when HEIC-like.
  */
 export async function parseHeicDirectly(
 	buffer: ArrayBuffer,
 	file: File,
 ): Promise<ParsedLivePhoto> {
-	const u8 = new Uint8Array(buffer);
-	const { photoBlob: rawPhotoBlob, videoBlob } = splitLivePhotoPayload(
-		u8,
-		file,
+	console.info(
+		`${LOG_TAG} parse start`,
+		JSON.stringify({
+			name: file.name,
+			type: file.type || "(empty)",
+			size: file.size,
+		}),
 	);
+
+	const u8 = new Uint8Array(buffer);
+	const { photoBlob: rawPhotoBlob, videoBlob } = splitLivePhotoPayload(u8, file);
 	const photoBlob = await buildDisplayPhotoBlob(rawPhotoBlob, file.name);
+
+	console.info(
+		`${LOG_TAG} parse done`,
+		JSON.stringify({
+			photoType: photoBlob.type || "(empty)",
+			photoSize: photoBlob.size,
+			videoType: videoBlob?.type || null,
+			videoSize: videoBlob?.size || 0,
+		}),
+	);
 
 	return {
 		photoBlob,
@@ -39,15 +51,19 @@ function splitLivePhotoPayload(
 	file: File,
 ): { photoBlob: Blob; videoBlob: Blob | null } {
 	const starts = collectIsoContainerStarts(data);
+	console.debug(`${LOG_TAG} ISO container starts:`, starts);
+
 	if (starts.length < 2) {
+		console.debug(`${LOG_TAG} no appended video container detected`);
 		return {
 			photoBlob: file,
 			videoBlob: null,
 		};
 	}
 
-	const videoStart = starts[starts.length - 1];
-	if (videoStart <= 0 || videoStart >= data.length) {
+	const videoStart = pickLikelyVideoStart(data, starts);
+	if (videoStart == null || videoStart <= 0 || videoStart >= data.length) {
+		console.debug(`${LOG_TAG} no reliable video start candidate, skip split`);
 		return {
 			photoBlob: file,
 			videoBlob: null,
@@ -56,11 +72,49 @@ function splitLivePhotoPayload(
 
 	const photoType = detectPhotoMime(data, file.name, file.type);
 	const videoType = detectVideoMime(data, videoStart);
+	const videoBrand = readMajorBrandAtStart(data, videoStart);
+
+	console.info(
+		`${LOG_TAG} split payload`,
+		JSON.stringify({
+			videoStart,
+			videoBrand,
+			photoType,
+			videoType,
+			photoBytes: videoStart,
+			videoBytes: data.length - videoStart,
+		}),
+	);
 
 	return {
 		photoBlob: new Blob([data.slice(0, videoStart)], { type: photoType }),
 		videoBlob: new Blob([data.slice(videoStart)], { type: videoType }),
 	};
+}
+
+function pickLikelyVideoStart(
+	data: Uint8Array,
+	starts: number[],
+): number | null {
+	const sorted = [...new Set(starts)].sort((a, b) => a - b);
+	for (let i = sorted.length - 1; i >= 1; i--) {
+		const start = sorted[i];
+		const brand = readMajorBrandAtStart(data, start);
+		if (!brand) continue;
+		console.debug(
+			`${LOG_TAG} candidate container`,
+			JSON.stringify({ start, brand }),
+		);
+
+		if (isHeifBrand(brand)) {
+			continue;
+		}
+
+		if (isLikelyVideoBrand(brand) || hasVideoBoxSignature(data, start)) {
+			return start;
+		}
+	}
+	return null;
 }
 
 function collectIsoContainerStarts(data: Uint8Array): number[] {
@@ -81,6 +135,41 @@ function collectIsoContainerStarts(data: Uint8Array): number[] {
 	}
 
 	return [...new Set(starts)].sort((a, b) => a - b);
+}
+
+function readMajorBrandAtStart(data: Uint8Array, start: number): string | null {
+	if (start + 12 > data.length) return null;
+	if (readAscii(data, start + 4, 4) !== "ftyp") return null;
+	return readAscii(data, start + 8, 4);
+}
+
+function isLikelyVideoBrand(brand: string): boolean {
+	return (
+		brand === "qt  " ||
+		brand === "isom" ||
+		brand === "iso2" ||
+		brand === "mp41" ||
+		brand === "mp42" ||
+		brand === "avc1" ||
+		brand === "hvc1" ||
+		brand === "M4V "
+	);
+}
+
+function detectVideoMime(data: Uint8Array, start: number): string {
+	const brand = readMajorBrandAtStart(data, start);
+	if (brand === "qt  ") return "video/quicktime";
+	return "video/mp4";
+}
+
+function hasVideoBoxSignature(data: Uint8Array, start: number): boolean {
+	const end = Math.min(data.length, start + 512 * 1024);
+	const probe = data.subarray(start, end);
+	return (
+		findPattern(probe, [0x6d, 0x6f, 0x6f, 0x76]) >= 0 || // moov
+		findPattern(probe, [0x6d, 0x76, 0x68, 0x64]) >= 0 || // mvhd
+		findPattern(probe, [0x74, 0x72, 0x61, 0x6b]) >= 0 // trak
+	);
 }
 
 function detectPhotoMime(
@@ -114,29 +203,33 @@ function isHeifBrand(brand: string): boolean {
 	);
 }
 
-function detectVideoMime(data: Uint8Array, start: number): string {
-	const ftypPos = start + 4;
-	if (ftypPos + 12 <= data.length && readAscii(data, ftypPos, 4) === "ftyp") {
-		const majorBrand = readAscii(data, ftypPos + 4, 4);
-		if (majorBrand === "qt  ") return "video/quicktime";
-	}
-	return "video/mp4";
-}
-
 async function buildDisplayPhotoBlob(
 	photoBlob: Blob,
 	fileName: string,
 ): Promise<Blob> {
 	if (!isHeicLike(photoBlob.type, fileName)) {
+		console.debug(
+			`${LOG_TAG} photo is not HEIC-like, skip decode`,
+			photoBlob.type || "(empty)",
+		);
 		return photoBlob;
 	}
 
-	try {
-		const decoded = await decodeHeicToJpeg(photoBlob, fileName);
-		return decoded ?? photoBlob;
-	} catch {
-		return photoBlob;
+	const decoded = await decodeHeicToJpegByWasm(photoBlob);
+	if (decoded) {
+		console.info(
+			`${LOG_TAG} HEIC decoded to JPEG by wasm`,
+			JSON.stringify({
+				inputType: photoBlob.type || "(empty)",
+				inputSize: photoBlob.size,
+				outputSize: decoded.size,
+			}),
+		);
+		return decoded;
 	}
+
+	console.warn(`${LOG_TAG} wasm HEIC decode failed, using source blob`);
+	return photoBlob;
 }
 
 function isHeicLike(mime: string, fileName: string): boolean {
@@ -150,212 +243,40 @@ function isHeicLike(mime: string, fileName: string): boolean {
 	);
 }
 
-async function decodeHeicToJpeg(
-	photoBlob: Blob,
-	fileName: string,
-): Promise<Blob | null> {
-	const u8 = new Uint8Array(await photoBlob.arrayBuffer());
-	const boxes = parseTopLevelBoxes(u8);
+async function decodeHeicToJpegByWasm(photoBlob: Blob): Promise<Blob | null> {
+	if (typeof window === "undefined") {
+		console.warn(`${LOG_TAG} wasm decode skipped on non-browser runtime`);
+		return null;
+	}
 
-	const metaBox = boxes.find((box) => box.type === "meta");
-	const mdatBox = boxes.find((box) => box.type === "mdat");
-	if (!metaBox || !mdatBox) return null;
-
-	const description = extractHvccDescription(u8, metaBox);
-	const codec = buildCodecString(description, fileName);
-	const firstChunk = readFirstMdatChunk(u8, mdatBox);
-	if (!firstChunk) return null;
-
-	const frame = await decodePacketToFrame(
-		codec,
-		description,
-		firstChunk,
-		0,
-		"key",
-	);
 	try {
-		return await frameToJpegBlob(frame);
-	} finally {
-		frame.close();
-	}
-}
+		const mod = await import("heic2any");
+		const heic2any = mod.default as (options: {
+			blob: Blob;
+			toType?: string;
+			quality?: number;
+		}) => Promise<Blob | Blob[]>;
 
-function parseTopLevelBoxes(data: Uint8Array): Box[] {
-	const boxes: Box[] = [];
-	let offset = 0;
-	const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-
-	while (offset + 8 <= data.length) {
-		let size = view.getUint32(offset);
-		const type = readAscii(data, offset + 4, 4);
-		let headerSize = 8;
-
-		if (size === 1) {
-			if (offset + 16 > data.length) break;
-			size = Number(view.getBigUint64(offset + 8));
-			headerSize = 16;
-		}
-		if (size === 0) {
-			size = data.length - offset;
-		}
-		if (size < headerSize || offset + size > data.length) break;
-
-		boxes.push({ type, start: offset, size, headerSize });
-		offset += size;
-	}
-
-	return boxes;
-}
-
-function extractHvccDescription(data: Uint8Array, metaBox: Box): Uint8Array {
-	const metaStart = metaBox.start + metaBox.headerSize + 4;
-	const metaEnd = metaBox.start + metaBox.size;
-	const metaContent = data.subarray(metaStart, metaEnd);
-	const hvcCPos = findPattern(metaContent, [0x68, 0x76, 0x63, 0x43]);
-	if (hvcCPos < 4) {
-		throw new Error("hvcC box not found in HEIC meta box");
-	}
-
-	const sizeView = new DataView(
-		metaContent.buffer,
-		metaContent.byteOffset + hvcCPos - 4,
-		4,
-	);
-	const hvcCSize = sizeView.getUint32(0);
-	if (hvcCSize <= 8 || hvcCPos + hvcCSize > metaContent.length) {
-		throw new Error("Invalid hvcC box size");
-	}
-
-	return metaContent.subarray(hvcCPos + 4, hvcCPos + hvcCSize - 4);
-}
-
-function buildCodecString(description: Uint8Array, fileName: string): string {
-	if (description.length >= 13) {
-		const profile = description[1];
-		const tier = description[2] & 0x20 ? "H" : "L";
-		const level = description[12];
-		return `hvc1.${profile}.6.${tier}${level}.B0`;
-	}
-
-	if (fileName.toLowerCase().endsWith(".heic")) {
-		return "hvc1.1.6.L93.B0";
-	}
-	return "hvc1";
-}
-
-function readFirstMdatChunk(data: Uint8Array, mdatBox: Box): Uint8Array | null {
-	const bodyStart = mdatBox.start + mdatBox.headerSize;
-	const bodyEnd = mdatBox.start + mdatBox.size;
-	const payload = data.subarray(bodyStart, bodyEnd);
-	const view = new DataView(
-		payload.buffer,
-		payload.byteOffset,
-		payload.byteLength,
-	);
-
-	let offset = 0;
-	while (offset + 4 <= payload.length) {
-		const naluSize = view.getUint32(offset);
-		const dataStart = offset + 4;
-		const dataEnd = dataStart + naluSize;
-
-		if (naluSize > 0 && dataEnd <= payload.length) {
-			return payload.subarray(dataStart, dataEnd);
-		}
-		offset = dataEnd;
-	}
-
-	return null;
-}
-
-async function decodePacketToFrame(
-	codec: string,
-	description: Uint8Array | null | undefined,
-	chunkData: Uint8Array,
-	timestamp: number,
-	type: "key" | "delta",
-): Promise<VideoFrame> {
-	return new Promise((resolve, reject) => {
-		let settled = false;
-		const decoder = new VideoDecoder({
-			output: (frame) => {
-				if (settled) {
-					frame.close();
-					return;
-				}
-				settled = true;
-				resolve(frame);
-				decoder.close();
-			},
-			error: (error) => {
-				if (!settled) {
-					settled = true;
-					reject(error);
-				}
-			},
+		const result = await heic2any({
+			blob: photoBlob,
+			toType: "image/jpeg",
+			quality: 0.85,
 		});
 
-		decoder.configure(
-			description
-				? {
-						codec,
-						description,
-						hardwareAcceleration: "prefer-hardware",
-					}
-				: {
-						codec,
-						hardwareAcceleration: "prefer-hardware",
-					},
-		);
-
-		decoder.decode(
-			new EncodedVideoChunk({
-				type,
-				timestamp,
-				data: chunkData,
-			}),
-		);
-
-		decoder.flush().catch((error) => {
-			if (!settled) {
-				settled = true;
-				reject(error);
+		if (Array.isArray(result)) {
+			const first = result[0] ?? null;
+			if (!first) {
+				console.warn(`${LOG_TAG} wasm decode returned empty Blob[]`);
+				return null;
 			}
-		});
-	});
-}
-
-async function frameToJpegBlob(frame: VideoFrame): Promise<Blob> {
-	if (typeof OffscreenCanvas !== "undefined") {
-		const canvas = new OffscreenCanvas(frame.displayWidth, frame.displayHeight);
-		const ctx = canvas.getContext("2d");
-		if (!ctx) {
-			throw new Error("Unable to get 2d context from OffscreenCanvas");
+			return first;
 		}
 
-		ctx.drawImage(frame, 0, 0);
-		return canvas.convertToBlob({
-			type: "image/jpeg",
-			quality: 0.92,
-		});
+		return result;
+	} catch (error) {
+		console.warn(`${LOG_TAG} wasm(heic2any) decode failed`, error);
+		return null;
 	}
-
-	const canvas = document.createElement("canvas");
-	canvas.width = frame.displayWidth;
-	canvas.height = frame.displayHeight;
-	const ctx = canvas.getContext("2d");
-	if (!ctx) {
-		throw new Error("Unable to get 2d context from canvas");
-	}
-
-	ctx.drawImage(frame, 0, 0);
-	const blob = await new Promise<Blob | null>((resolve) => {
-		canvas.toBlob(resolve, "image/jpeg", 0.92);
-	});
-	if (!blob) {
-		throw new Error("Failed to encode frame as JPEG");
-	}
-	return blob;
 }
 
 function readAscii(data: Uint8Array, offset: number, length: number): string {
