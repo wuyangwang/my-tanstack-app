@@ -26,6 +26,10 @@ export const Route = createFileRoute("/speech-to-text")({
 });
 
 function SpeechToText() {
+	const formatTimestamp = (value: unknown) => (
+		typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(2)}s` : "..."
+	);
+
 	const {
 		model, setModel,
 		task, setTask,
@@ -316,7 +320,7 @@ function SpeechToText() {
 									{result.chunks.map((chunk: any, i: number) => (
 										<div key={i} className="flex gap-4 text-sm border-b pb-2 last:border-0">
 											<span className="font-mono text-muted-foreground w-24 shrink-0">
-												[{chunk.timestamp[0].toFixed(2)}s - {chunk.timestamp[1]?.toFixed(2) || "..."}s]
+												[{formatTimestamp(chunk.timestamp?.[0])} - {formatTimestamp(chunk.timestamp?.[1])}]
 											</span>
 											<span>{chunk.text}</span>
 										</div>
