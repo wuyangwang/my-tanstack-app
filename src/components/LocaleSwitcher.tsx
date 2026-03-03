@@ -1,8 +1,8 @@
 // Locale switcher refs:
 // - Paraglide docs: https://inlang.com/m/gerre34r/library-inlang-paraglideJs
 // - Router example: https://github.com/TanStack/router/tree/main/examples/react/i18n-paraglide#switching-locale
-import { useEffect, useState } from "react"
-import { cookieName, getLocale, locales, setLocale } from "@/paraglide/runtime"
+import { useRouter, useMatches } from "@tanstack/react-router"
+import { getLocale, locales, setLocale } from "@/paraglide/runtime"
 import { m } from "@/paraglide/messages"
 import {
   Select,
@@ -20,28 +20,12 @@ const localeLabels: Record<LocaleCode, string> = {
 }
 
 export default function ParaglideLocaleSwitcher() {
-  const [selectedLocale, setSelectedLocale] = useState<LocaleCode>("zh")
-
-  useEffect(() => {
-    const locale = getLocale() as LocaleCode
-    const hasSavedLocale = document.cookie
-      .split(";")
-      .some((cookie) => cookie.trim().startsWith(`${cookieName}=`))
-
-    if (!hasSavedLocale && locale !== "zh") {
-      setSelectedLocale("zh")
-      void setLocale("zh")
-      return
-    }
-
-    setSelectedLocale(locale)
-  }, [])
+  const router = useRouter()
+  const matches = useMatches()
+  const selectedLocale = getLocale()
 
   const onLocaleChange = (nextLocale: string) => {
-    if (!locales.includes(nextLocale as (typeof locales)[number])) return
-
-    setSelectedLocale(nextLocale as LocaleCode)
-    void setLocale(nextLocale as LocaleCode)
+    setLocale(nextLocale)
   }
 
   return (

@@ -24,6 +24,7 @@ export const getRouter = () => {
     },
 
     defaultPreload: 'intent',
+    defaultNotFoundComponent: () => <div>找不到页面</div>,
   })
 
   setupRouterSsrQueryIntegration({ router, queryClient: rqContext.queryClient })
