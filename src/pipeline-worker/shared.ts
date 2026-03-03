@@ -10,16 +10,31 @@ env.useBrowserCache = true;
 
 console.log('---------env ',env)
 
+interface PipelineMessageContext {
+  requestId: number;
+}
+
 /**
  * Common configuration and pipeline initialization for Hugging Face Transformers.
  */
-export async function getPipeline(task: PipelineType, model: string, options: any = {}) {
+export async function getPipeline(
+  task: PipelineType,
+  model: string,
+  options: any = {},
+  context: PipelineMessageContext
+) {
+  const { progress_callback: externalProgressCallback, ...restOptions } = options;
+
   // Check for WebGPU support
   const isWebGPUSupported = await checkWebGPU();
   const device = isWebGPUSupported ? 'webgpu' : 'wasm';
   console.log('isWebGPUSupported', isWebGPUSupported)
 
-  self.postMessage({ status: 'init', message: `Initializing ${model} on ${device}...` });
+  self.postMessage({
+    status: 'init',
+    requestId: context.requestId,
+    message: `Initializing ${model} on ${device}...`
+  });
 
   const p = await pipeline(task, model, {
     device: device as any,
@@ -28,20 +43,33 @@ export async function getPipeline(task: PipelineType, model: string, options: an
     progress_callback: (progress: any) => {
       self.postMessage({
         status: 'progress',
-        ...progress
+        requestId: context.requestId,
+        file: progress.file,
+        progress: progress.progress
       });
+      if (typeof externalProgressCallback === 'function') {
+        externalProgressCallback(progress);
+      }
     },
-    ...options
+    ...restOptions
   });
 
-  self.postMessage({ status: 'ready', message: `Model loaded on ${device}` });
+  self.postMessage({
+    status: 'ready',
+    requestId: context.requestId,
+    message: `Model loaded on ${device}`
+  });
   return p;
 }
 
 /**
  * Handle worker errors and send messages back to main thread.
  */
-export function handleError(error: any) {
+export function handleError(error: any, requestId: number) {
   console.error('Worker error:', error);
-  self.postMessage({ status: 'error', message: error.message });
+  self.postMessage({
+    status: 'error',
+    requestId,
+    error: error?.message || 'Unknown worker error',
+  });
 }

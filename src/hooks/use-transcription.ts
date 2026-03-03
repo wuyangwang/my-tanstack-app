@@ -1,18 +1,16 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useWorker } from "./use-worker";
 import { decodeAudioData } from "@/lib/audio-utils";
+import type {
+	TranscriptionLanguage,
+	TranscriptionResult,
+	TranscriptionTask,
+	TranscriptionWorkerRequest,
+	TranscriptionWorkerResponse,
+} from "@/lib/worker-messages";
 
-export type TranscriptionTask = "transcribe" | "translate";
-export type TranscriptionLanguage = "chinese" | "english";
-
-export interface TranscriptionResult {
-  text: string;
-  chunks: Array<{
-    timestamp: [number, number];
-    text: string;
-  }>;
-}
+export type { TranscriptionTask, TranscriptionLanguage, TranscriptionResult };
 
 export function useTranscription() {
   const [model, setModel] = useState("onnx-community/whisper-tiny");
@@ -23,25 +21,31 @@ export function useTranscription() {
   const [status, setStatus] = useState("");
   const [progress, setProgress] = useState<Record<string, number>>({});
   const [result, setResult] = useState<TranscriptionResult | null>(null);
+  const inFlightRef = useRef(false);
+  const requestCounterRef = useRef(0);
+  const activeRequestIdRef = useRef<number | null>(null);
 
   const { postMessage, setOnMessage } = useWorker('transcription');
 
   useEffect(() => {
-    setOnMessage((e: MessageEvent) => {
-      const { status: workerStatus, message, result: workerResult, error, file, progress: p } = e.data;
+    setOnMessage((e: MessageEvent<TranscriptionWorkerResponse>) => {
+      const data = e.data;
+      if (activeRequestIdRef.current !== data.requestId) {
+        return;
+      }
       
-      switch (workerStatus) {
+      switch (data.status) {
         case "init":
-          setStatus(message);
+          setStatus(data.message);
           setProgress({});
           break;
         case "progress":
-          if (file) {
-            setProgress(prev => ({ ...prev, [file]: p }));
+          if (data.file) {
+            setProgress(prev => ({ ...prev, [data.file]: data.progress }));
           }
           break;
         case "processing":
-          setStatus(message);
+          setStatus(data.message);
           setProgress({});
           break;
         case "ready":
@@ -49,14 +53,18 @@ export function useTranscription() {
           setProgress({});
           break;
         case "complete":
-          setResult(workerResult);
+          inFlightRef.current = false;
+          activeRequestIdRef.current = null;
+          setResult(data.result);
           setLoading(false);
           setStatus("");
           setProgress({});
           toast.success("转换成功");
           break;
         case "error":
-          toast.error(`错误: ${error || message}`);
+          inFlightRef.current = false;
+          activeRequestIdRef.current = null;
+          toast.error(`错误: ${data.error}`);
           setLoading(false);
           setStatus("");
           setProgress({});
@@ -66,23 +74,39 @@ export function useTranscription() {
   }, [setOnMessage]);
 
   const transcribe = useCallback(async (audioData: ArrayBuffer) => {
+    if (inFlightRef.current) {
+      return false;
+    }
+
+    inFlightRef.current = true;
     setLoading(true);
+    setProgress({});
     setResult(null);
     
     try {
       setStatus("正在解码音频...");
       const audio = await decodeAudioData(audioData);
+      const requestId = ++requestCounterRef.current;
+      activeRequestIdRef.current = requestId;
       
-      postMessage({
+      const message: TranscriptionWorkerRequest = {
+        type: "transcription:run",
+        requestId,
         audio,
         model,
         task,
         language,
-      });
+      };
+
+      postMessage(message, [audio.buffer as ArrayBuffer]);
+      return true;
     } catch (error: any) {
+      inFlightRef.current = false;
+      activeRequestIdRef.current = null;
       toast.error(`音频处理失败: ${error.message}`);
       setLoading(false);
       setStatus("");
+      return false;
     }
   }, [postMessage, model, task, language]);
 
