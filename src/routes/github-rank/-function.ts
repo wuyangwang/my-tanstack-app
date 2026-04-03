@@ -3,6 +3,8 @@ import { createServerFn } from "@tanstack/react-start";
 const GITHUB_API_BASE = "https://api.github.com";
 const MAX_REPOS = 100;
 const METRICS_CONCURRENCY = 4;
+const GITHUB_TOKEN =
+	typeof process !== "undefined" ? process.env.GITHUB_TOKEN : undefined;
 
 export type GithubRankSortKey = "stars" | "commitCount" | "contributorCount";
 
@@ -51,11 +53,19 @@ const parseLastPage = (linkHeader: string | null): number | null => {
 	return null;
 };
 
-const buildGitHubHeaders = (): HeadersInit => ({
-	Accept: "application/vnd.github+json",
-	"User-Agent": "my-tanstack-app",
-	"X-GitHub-Api-Version": "2022-11-28",
-});
+const buildGitHubHeaders = (): HeadersInit => {
+	const headers: HeadersInit = {
+		Accept: "application/vnd.github+json",
+		"User-Agent": "my-tanstack-app",
+		"X-GitHub-Api-Version": "2022-11-28",
+	};
+
+	if (GITHUB_TOKEN) {
+		headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
+	}
+
+	return headers;
+};
 
 const readRateLimitError = async (response: Response): Promise<never> => {
 	const remaining = response.headers.get("x-ratelimit-remaining");
