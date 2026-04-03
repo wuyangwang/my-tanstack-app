@@ -12,6 +12,11 @@ export interface GithubRepoMetrics {
 	name: string;
 	htmlUrl: string;
 	stars: number;
+	forks: number;
+	openIssues: number;
+	language: string | null;
+	description: string | null;
+	avatarUrl: string;
 	updatedAt: string;
 }
 
@@ -20,6 +25,13 @@ interface GithubRepo {
 	name: string;
 	html_url: string;
 	stargazers_count: number;
+	forks_count: number;
+	open_issues_count: number;
+	language: string | null;
+	description: string | null;
+	owner: {
+		avatar_url: string;
+	};
 	default_branch: string;
 	updated_at: string;
 }
@@ -89,6 +101,12 @@ export const fetchGithubRepoMetrics = createServerFn({
 				name: repo.name,
 				htmlUrl: repo.html_url,
 				stars: repo.stargazers_count,
+				forks: repo.forks_count,
+				openIssues: repo.open_issues_count,
+				language: repo.language,
+				description: repo.description,
+				topics: repo.topics || [],
+				avatarUrl: repo.owner.avatar_url,
 				updatedAt: repo.updated_at,
 			}),
 		);

@@ -1,6 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ExternalLink, Loader2 } from "lucide-react";
+import {
+	CircleDot,
+	Code2,
+	ExternalLink,
+	GitFork,
+	Loader2,
+	Star,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -10,6 +19,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import * as m from "@/paraglide/messages";
 import { fetchGithubRepoMetrics, type GithubRepoMetrics } from "./-function";
 
@@ -80,7 +97,7 @@ function GithubRankPage() {
 						disabled={loading}
 						onClick={() => void loadRepos()}
 					>
-						{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+						{loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
 						{m.github_rank_fetch()}
 					</Button>
 				</CardContent>
@@ -106,43 +123,114 @@ function GithubRankPage() {
 			) : null}
 
 			{!loading && !error && sortedRows.length > 0 ? (
-				<div className="overflow-x-auto rounded-xl border">
-					<table className="min-w-full text-left text-sm">
-						<thead className="bg-muted/60 text-muted-foreground">
-							<tr>
-								<th className="px-4 py-3">#</th>
-								<th className="px-4 py-3">{m.github_rank_repo()}</th>
-								<th className="px-4 py-3 text-right">
+				<div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead className="w-[60px] text-center">#</TableHead>
+								<TableHead>{m.github_rank_repo()}</TableHead>
+								<TableHead className="hidden md:table-cell">
+									{m.github_rank_language()}
+								</TableHead>
+								<TableHead className="text-right">
 									{m.github_rank_stars()}
-								</th>
-								<th className="px-4 py-3 text-right">
+								</TableHead>
+								<TableHead className="text-right hidden sm:table-cell">
+									{m.github_rank_forks()}
+								</TableHead>
+								<TableHead className="text-right hidden lg:table-cell">
+									{m.github_rank_open_issues()}
+								</TableHead>
+								<TableHead className="text-right whitespace-nowrap">
 									{m.github_rank_updated()}
-								</th>
-							</tr>
-						</thead>
-						<tbody>
+								</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
 							{sortedRows.map((repo, index) => (
-								<tr key={repo.htmlUrl} className="border-t">
-									<td className="px-4 py-3 font-semibold">{index + 1}</td>
-									<td className="px-4 py-3">
-										<a
-											href={repo.htmlUrl}
-											target="_blank"
-											rel="noreferrer"
-											className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-										>
-											{repo.fullName}
-											<ExternalLink className="h-3.5 w-3.5" />
-										</a>
-									</td>
-									<td className="px-4 py-3 text-right">{repo.stars}</td>
-									<td className="px-4 py-3 text-right text-muted-foreground">
+								<TableRow key={repo.htmlUrl}>
+									<TableCell className="text-center font-mono font-medium text-muted-foreground">
+										{index + 1}
+									</TableCell>
+									<TableCell>
+										<div className="flex items-start gap-3">
+											<Avatar className="mt-1">
+												<AvatarImage src={repo.avatarUrl} alt={repo.fullName} />
+												<AvatarFallback>
+													{repo.name.slice(0, 2).toUpperCase()}
+												</AvatarFallback>
+											</Avatar>
+											<div className="flex flex-col gap-1 min-w-0">
+												<a
+													href={repo.htmlUrl}
+													target="_blank"
+													rel="noreferrer"
+													className="inline-flex items-center gap-1 font-bold text-primary hover:underline transition-all truncate"
+												>
+													{repo.fullName}
+													<ExternalLink className="h-3 w-3 shrink-0" />
+												</a>
+												{repo.description && (
+													<p className="text-xs text-muted-foreground line-clamp-2 max-w-[300px] leading-relaxed">
+														{repo.description}
+													</p>
+												)}
+												{repo.topics && repo.topics.length > 0 && (
+													<div className="mt-1 flex flex-wrap gap-1">
+														{repo.topics.slice(0, 4).map((topic) => (
+															<Badge
+																key={topic}
+																variant="secondary"
+																className="h-4 px-1 text-[10px] font-normal"
+															>
+																{topic}
+															</Badge>
+														))}
+														{repo.topics.length > 4 && (
+															<span className="text-[10px] text-muted-foreground self-center">
+																+{repo.topics.length - 4}
+															</span>
+														)}
+													</div>
+												)}
+											</div>
+										</div>
+									</TableCell>
+									<TableCell className="hidden md:table-cell">
+										{repo.language ? (
+											<Badge variant="outline" className="font-normal">
+												<Code2 className="mr-1 h-3 w-3" />
+												{repo.language}
+											</Badge>
+										) : (
+											"-"
+										)}
+									</TableCell>
+									<TableCell className="text-right font-medium">
+										<div className="flex items-center justify-end gap-1">
+											<Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+											{repo.stars.toLocaleString()}
+										</div>
+									</TableCell>
+									<TableCell className="text-right text-muted-foreground hidden sm:table-cell">
+										<div className="flex items-center justify-end gap-1">
+											<GitFork className="h-3.5 w-3.5" />
+											{repo.forks.toLocaleString()}
+										</div>
+									</TableCell>
+									<TableCell className="text-right text-muted-foreground hidden lg:table-cell">
+										<div className="flex items-center justify-end gap-1">
+											<CircleDot className="h-3.5 w-3.5" />
+											{repo.openIssues.toLocaleString()}
+										</div>
+									</TableCell>
+									<TableCell className="text-right text-muted-foreground text-xs whitespace-nowrap">
 										{new Date(repo.updatedAt).toLocaleDateString()}
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							))}
-						</tbody>
-					</table>
+						</TableBody>
+					</Table>
 				</div>
 			) : null}
 		</div>
