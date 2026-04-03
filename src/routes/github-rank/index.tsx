@@ -11,18 +11,13 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import * as m from "@/paraglide/messages";
-import {
-	fetchGithubRepoMetrics,
-	type GithubRankSortKey,
-	type GithubRepoMetrics,
-} from "./-function";
+import { fetchGithubRepoMetrics, type GithubRepoMetrics } from "./-function";
 
 export const Route = createFileRoute("/github-rank/")({
 	component: GithubRankPage,
 });
 
 function GithubRankPage() {
-	const [sortKey, setSortKey] = useState<GithubRankSortKey>("stars");
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [rows, setRows] = useState<GithubRepoMetrics[]>([]);
@@ -51,24 +46,10 @@ function GithubRankPage() {
 		void loadRepos();
 	}, []);
 
-	const sortedRows = useMemo(() => {
-		const valueSelector: Record<
-			GithubRankSortKey,
-			(item: GithubRepoMetrics) => number
-		> = {
-			stars: (item) => item.stars,
-			commitCount: (item) => item.commitCount,
-			contributorCount: (item) => item.contributorCount,
-		};
-
-		return [...rows].sort((a, b) => {
-			const diff = valueSelector[sortKey](b) - valueSelector[sortKey](a);
-			if (diff !== 0) {
-				return diff;
-			}
-			return b.stars - a.stars;
-		});
-	}, [rows, sortKey]);
+	const sortedRows = useMemo(
+		() => [...rows].sort((a, b) => b.stars - a.stars),
+		[rows],
+	);
 
 	return (
 		<div className="container mx-auto max-w-6xl space-y-8 px-4 py-20">
@@ -86,21 +67,12 @@ function GithubRankPage() {
 					<CardTitle>{m.github_rank_fetch()}</CardTitle>
 				</CardHeader>
 				<CardContent className="flex flex-col gap-4 md:flex-row md:items-center">
-					<Select
-						value={sortKey}
-						onValueChange={(value) => setSortKey(value as GithubRankSortKey)}
-					>
+					<Select value="stars" disabled>
 						<SelectTrigger className="w-full md:w-[240px]">
 							<SelectValue placeholder={m.github_rank_sort_by()} />
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="stars">{m.github_rank_stars()}</SelectItem>
-							<SelectItem value="commitCount">
-								{m.github_rank_commits()}
-							</SelectItem>
-							<SelectItem value="contributorCount">
-								{m.github_rank_contributors()}
-							</SelectItem>
 						</SelectContent>
 					</Select>
 					<Button
@@ -144,12 +116,6 @@ function GithubRankPage() {
 									{m.github_rank_stars()}
 								</th>
 								<th className="px-4 py-3 text-right">
-									{m.github_rank_commits()}
-								</th>
-								<th className="px-4 py-3 text-right">
-									{m.github_rank_contributors()}
-								</th>
-								<th className="px-4 py-3 text-right">
 									{m.github_rank_updated()}
 								</th>
 							</tr>
@@ -170,10 +136,6 @@ function GithubRankPage() {
 										</a>
 									</td>
 									<td className="px-4 py-3 text-right">{repo.stars}</td>
-									<td className="px-4 py-3 text-right">{repo.commitCount}</td>
-									<td className="px-4 py-3 text-right">
-										{repo.contributorCount}
-									</td>
 									<td className="px-4 py-3 text-right text-muted-foreground">
 										{new Date(repo.updatedAt).toLocaleDateString()}
 									</td>
