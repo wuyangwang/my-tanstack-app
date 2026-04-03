@@ -21,7 +21,7 @@ import {
 	Video,
 	Mic,
 	Scan,
-	Disc,
+	Github,
 } from "lucide-react";
 import { ModeToggle } from "./ModeToggle";
 import * as m from "@/paraglide/messages";
@@ -125,7 +125,7 @@ export default function Header() {
 					</Link>
 
 					<Link
-						to="/live-photo-tool"
+						to="/github-rank"
 						onClick={() => setIsOpen(false)}
 						className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
 						activeProps={{
@@ -133,8 +133,8 @@ export default function Header() {
 								"flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold",
 						}}
 					>
-						<Disc size={20} />
-						<span className="font-medium">{m.live_photo_tool()}</span>
+						<Github size={20} />
+						<span className="font-medium">{m.github_rank_tool()}</span>
 					</Link>
 				</nav>
 

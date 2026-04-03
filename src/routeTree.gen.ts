@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpeechToTextRouteImport } from './routes/speech-to-text'
 import { Route as ObjectDetectionRouteImport } from './routes/object-detection'
 import { Route as LivePhotoToolRouteImport } from './routes/live-photo-tool'
+import { Route as GithubRankIndexRouteImport } from './routes/github-rank/index'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DouyinToolIndexRouteImport } from './routes/douyin-tool/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
@@ -30,6 +31,11 @@ const ObjectDetectionRoute = ObjectDetectionRouteImport.update({
 const LivePhotoToolRoute = LivePhotoToolRouteImport.update({
   id: '/live-photo-tool',
   path: '/live-photo-tool',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GithubRankIndexRoute = GithubRankIndexRouteImport.update({
+  id: '/github-rank/',
+  path: '/github-rank/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -55,6 +61,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/github-rank/': typeof GithubRankIndexRoute
   '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/github-rank': typeof GithubRankIndexRoute
   '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/github-rank/': typeof GithubRankIndexRoute
   '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/github-rank/'
     | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/github-rank'
     | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/github-rank/'
     | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GithubRankIndexRoute: typeof GithubRankIndexRoute
   LivePhotoToolRoute: typeof LivePhotoToolRoute
   ObjectDetectionRoute: typeof ObjectDetectionRoute
   SpeechToTextRoute: typeof SpeechToTextRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/live-photo-tool'
       fullPath: '/live-photo-tool'
       preLoaderRoute: typeof LivePhotoToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/github-rank/': {
+      id: '/github-rank/'
+      path: '/github-rank'
+      fullPath: '/github-rank/'
+      preLoaderRoute: typeof GithubRankIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -177,6 +197,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GithubRankIndexRoute: GithubRankIndexRoute,
   LivePhotoToolRoute: LivePhotoToolRoute,
   ObjectDetectionRoute: ObjectDetectionRoute,
   SpeechToTextRoute: SpeechToTextRoute,

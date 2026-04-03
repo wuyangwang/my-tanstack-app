@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Video, Mic, ArrowRight, ScanSearch, Disc } from "lucide-react";
+import { Video, Mic, ArrowRight, ScanSearch, Github } from "lucide-react";
 import * as m from "@/paraglide/messages";
 
 export const Route = createFileRoute("/")({ component: App });
@@ -25,10 +25,10 @@ function App() {
 			link: "/object-detection",
 		},
 		{
-			icon: <Disc className="w-12 h-12" />,
-			title: m.live_photo_tool(),
-			description: m.live_photo_tool_description(),
-			link: "/live-photo-tool",
+			icon: <Github className="w-12 h-12" />,
+			title: m.github_rank_tool(),
+			description: m.github_rank_tool_description(),
+			link: "/github-rank",
 		},
 	];
 
