@@ -13,7 +13,7 @@
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",
     "db:studio": "drizzle-kit studio",
-    "format": "biome format",
+    "format": "biome format --fix",
     "lint": "biome lint",
     "log": "pnpx wrangler tail",
     "check": "biome check"

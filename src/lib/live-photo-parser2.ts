@@ -25,7 +25,10 @@ export async function parseHeicDirectly(
 	);
 
 	const u8 = new Uint8Array(buffer);
-	const { photoBlob: rawPhotoBlob, videoBlob } = splitLivePhotoPayload(u8, file);
+	const { photoBlob: rawPhotoBlob, videoBlob } = splitLivePhotoPayload(
+		u8,
+		file,
+	);
 	const photoBlob = await buildDisplayPhotoBlob(rawPhotoBlob, file.name);
 
 	console.info(

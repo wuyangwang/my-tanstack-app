@@ -7,7 +7,7 @@ import viteReact from "@vitejs/plugin-react";
 import { fileURLToPath, URL } from "url";
 import { defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
-import { wasmCleaner } from './plugin'
+import { wasmCleaner } from "./plugin";
 
 const config = defineConfig({
 	resolve: {
@@ -30,7 +30,7 @@ const config = defineConfig({
 		tailwindcss(),
 		tanstackStart(),
 		viteReact(),
-		wasmCleaner()
+		wasmCleaner(),
 	],
 });
 

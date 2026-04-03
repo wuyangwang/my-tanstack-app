@@ -32,13 +32,20 @@ async function findAllFtyps(file: File): Promise<number[]> {
 export async function parseLivePhoto(file: File) {
 	// Optimization: Detect all ftyp markers
 	const ftypPositions = await findAllFtyps(file);
-	console.log(`[parseLivePhoto] File size: ${file.size}, ftyp positions: ${ftypPositions.join(", ")}`);
+	console.log(
+		`[parseLivePhoto] File size: ${file.size}, ftyp positions: ${ftypPositions.join(", ")}`,
+	);
 
 	// Usually, the last ftyp marks the beginning of the appended video
-	const lastFtypPos = ftypPositions.length > 0 ? ftypPositions[ftypPositions.length - 1] : -1;
-	const isAppended = ftypPositions.length > 1 || (ftypPositions.length === 1 && lastFtypPos > 1024);
+	const lastFtypPos =
+		ftypPositions.length > 0 ? ftypPositions[ftypPositions.length - 1] : -1;
+	const isAppended =
+		ftypPositions.length > 1 ||
+		(ftypPositions.length === 1 && lastFtypPos > 1024);
 
-	console.log(`[parseLivePhoto] isAppended: ${isAppended}, lastFtypPos: ${lastFtypPos}`);
+	console.log(
+		`[parseLivePhoto] isAppended: ${isAppended}, lastFtypPos: ${lastFtypPos}`,
+	);
 
 	const photoBlob = isAppended ? file.slice(0, lastFtypPos - 4) : file;
 	const videoBlob = isAppended ? file.slice(lastFtypPos - 4) : null;
@@ -46,7 +53,11 @@ export async function parseLivePhoto(file: File) {
 	if (videoBlob) {
 		console.log(`[parseLivePhoto] videoBlob size: ${videoBlob.size}`);
 		const header = new Uint8Array(await videoBlob.slice(0, 16).arrayBuffer());
-		console.log(`[parseLivePhoto] videoBlob header (hex): ${Array.from(header).map(b => b.toString(16).padStart(2, '0')).join(' ')}`);
+		console.log(
+			`[parseLivePhoto] videoBlob header (hex): ${Array.from(header)
+				.map((b) => b.toString(16).padStart(2, "0"))
+				.join(" ")}`,
+		);
 	}
 
 	const canvas = document.createElement("canvas");
@@ -58,14 +69,22 @@ export async function parseLivePhoto(file: File) {
 	let imageBlob: Blob | null = null;
 	try {
 		await photoInput.ready;
-		console.log(`[parseLivePhoto] photoInput ready. Tracks found: ${photoInput.tracks?.length || 0}`);
+		console.log(
+			`[parseLivePhoto] photoInput ready. Tracks found: ${photoInput.tracks?.length || 0}`,
+		);
 		if (photoInput.tracks) {
-			photoInput.tracks.forEach((t, i) => console.log(`[parseLivePhoto] photo track ${i}: type=${t.type}, codec=${t.codec}`));
+			photoInput.tracks.forEach((t, i) =>
+				console.log(
+					`[parseLivePhoto] photo track ${i}: type=${t.type}, codec=${t.codec}`,
+				),
+			);
 		}
 
 		// Extract the first frame as a thumbnail
 		// Try 'video' first (for HEIC/HEVC sequences), then 'image' if mediabunny supports it
-		const imageTrack = photoInput.tracks?.find((t) => t.type === "video" || t.type === "image");
+		const imageTrack = photoInput.tracks?.find(
+			(t) => t.type === "video" || t.type === "image",
+		);
 		if (imageTrack) {
 			console.log(`[parseLivePhoto] Using track for image: ${imageTrack.type}`);
 			const sink = new EncodedPacketSink(imageTrack);
@@ -108,12 +127,17 @@ export async function parseLivePhoto(file: File) {
 			}
 		}
 	} catch (e) {
-		console.warn("Mediabunny failed to parse photo input (might be a standard image):", e);
+		console.warn(
+			"Mediabunny failed to parse photo input (might be a standard image):",
+			e,
+		);
 	}
 
 	const imagePreviewUrl = imageBlob
 		? URL.createObjectURL(imageBlob)
-		: photoBlob.type && !photoBlob.type.includes("heic") && !photoBlob.type.includes("heif")
+		: photoBlob.type &&
+				!photoBlob.type.includes("heic") &&
+				!photoBlob.type.includes("heif")
 			? URL.createObjectURL(photoBlob)
 			: "";
 
@@ -121,7 +145,10 @@ export async function parseLivePhoto(file: File) {
 	let finalPreviewUrl = imagePreviewUrl;
 	if (!finalPreviewUrl && photoBlob.size > 0) {
 		// If it's not HEIC/HEIF, or we don't know the type, try using it directly
-		if (!file.name.toLowerCase().endsWith(".heic") && !file.name.toLowerCase().endsWith(".heif")) {
+		if (
+			!file.name.toLowerCase().endsWith(".heic") &&
+			!file.name.toLowerCase().endsWith(".heif")
+		) {
 			finalPreviewUrl = URL.createObjectURL(photoBlob);
 		}
 	}
@@ -134,9 +161,15 @@ export async function parseLivePhoto(file: File) {
 				formats: ALL_FORMATS,
 			});
 			await videoInput.ready;
-			console.log(`[playLiveVideo] videoInput ready. Tracks: ${videoInput.tracks?.length || 0}`);
+			console.log(
+				`[playLiveVideo] videoInput ready. Tracks: ${videoInput.tracks?.length || 0}`,
+			);
 			if (videoInput.tracks) {
-				videoInput.tracks.forEach((t, i) => console.log(`[playLiveVideo] track ${i}: type=${t.type}, codec=${t.codec}`));
+				videoInput.tracks.forEach((t, i) =>
+					console.log(
+						`[playLiveVideo] track ${i}: type=${t.type}, codec=${t.codec}`,
+					),
+				);
 			}
 			const track = videoInput.tracks?.find((t) => t.type === "video");
 			if (!track) {

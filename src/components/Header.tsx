@@ -1,147 +1,147 @@
-import { Link } from '@tanstack/react-router'
+import { Link } from "@tanstack/react-router";
 
-import BetterAuthHeader from '../integrations/better-auth/header-user.tsx'
+import BetterAuthHeader from "../integrations/better-auth/header-user.tsx";
 
-import ParaglideLocaleSwitcher from './LocaleSwitcher.tsx'
+import ParaglideLocaleSwitcher from "./LocaleSwitcher.tsx";
 
-import { useState } from 'react'
+import { useState } from "react";
 import {
-  ChevronDown,
-  ChevronRight,
-  ClipboardType,
-  Database,
-  Globe,
-  Home,
-  Languages,
-  Menu,
-  Network,
-  SquareFunction,
-  StickyNote,
-  X,
-  Video,
-  Mic,
-  Scan,
-  Disc,
-} from 'lucide-react'
-import { ModeToggle } from './ModeToggle'
-import * as m from '@/paraglide/messages'
+	ChevronDown,
+	ChevronRight,
+	ClipboardType,
+	Database,
+	Globe,
+	Home,
+	Languages,
+	Menu,
+	Network,
+	SquareFunction,
+	StickyNote,
+	X,
+	Video,
+	Mic,
+	Scan,
+	Disc,
+} from "lucide-react";
+import { ModeToggle } from "./ModeToggle";
+import * as m from "@/paraglide/messages";
 
 export default function Header() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [groupedExpanded, setGroupedExpanded] = useState<
-    Record<string, boolean>
-  >({})
+	const [isOpen, setIsOpen] = useState(false);
+	const [groupedExpanded, setGroupedExpanded] = useState<
+		Record<string, boolean>
+	>({});
 
-  return (
-    <>
-      <header className="fixed top-0 left-0 right-0 h-16 px-4 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border text-foreground z-40">
-        <div className="flex items-center">
-          <button
-            onClick={() => setIsOpen(true)}
-            className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors text-foreground"
-            aria-label="Open menu"
-          >
-            <Menu size={24} />
-          </button>
-          <h1 className="ml-4 text-xl font-bold uppercase tracking-wider text-primary">
-            <Link to="/">
-              {m.toolbox()}
-            </Link>
-          </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <ParaglideLocaleSwitcher />
-          <ModeToggle />
-        </div>
-      </header>
+	return (
+		<>
+			<header className="fixed top-0 left-0 right-0 h-16 px-4 flex items-center justify-between bg-background/80 backdrop-blur-md border-b border-border text-foreground z-40">
+				<div className="flex items-center">
+					<button
+						onClick={() => setIsOpen(true)}
+						className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors text-foreground"
+						aria-label="Open menu"
+					>
+						<Menu size={24} />
+					</button>
+					<h1 className="ml-4 text-xl font-bold uppercase tracking-wider text-primary">
+						<Link to="/">{m.toolbox()}</Link>
+					</h1>
+				</div>
+				<div className="flex items-center gap-4">
+					<ParaglideLocaleSwitcher />
+					<ModeToggle />
+				</div>
+			</header>
 
-      <aside
-        className={`fixed top-0 left-0 h-full w-80 bg-background text-foreground shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col border-r border-border ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-xl font-bold uppercase tracking-widest text-primary">{m.home_page()}</h2>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
-            aria-label="Close menu"
-          >
-            <X size={24} />
-          </button>
-        </div>
+			<aside
+				className={`fixed top-0 left-0 h-full w-80 bg-background text-foreground shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col border-r border-border ${
+					isOpen ? "translate-x-0" : "-translate-x-full"
+				}`}
+			>
+				<div className="flex items-center justify-between p-4 border-b border-border">
+					<h2 className="text-xl font-bold uppercase tracking-widest text-primary">
+						{m.home_page()}
+					</h2>
+					<button
+						onClick={() => setIsOpen(false)}
+						className="p-2 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
+						aria-label="Close menu"
+					>
+						<X size={24} />
+					</button>
+				</div>
 
-        <nav className="flex-1 p-4 overflow-y-auto">
-          <Link
-            to="/"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
-            activeProps={{
-              className:
-                'flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold',
-            }}
-          >
-            <Home size={20} />
-            <span className="font-medium">{m.home_page()}</span>
-          </Link>
+				<nav className="flex-1 p-4 overflow-y-auto">
+					<Link
+						to="/"
+						onClick={() => setIsOpen(false)}
+						className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
+						activeProps={{
+							className:
+								"flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold",
+						}}
+					>
+						<Home size={20} />
+						<span className="font-medium">{m.home_page()}</span>
+					</Link>
 
-          <Link
-            to="/douyin-tool"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
-            activeProps={{
-              className:
-                'flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold',
-            }}
-          >
-            <Video size={20} />
-            <span className="font-medium">{m.douyin_tool()}</span>
-          </Link>
+					<Link
+						to="/douyin-tool"
+						onClick={() => setIsOpen(false)}
+						className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
+						activeProps={{
+							className:
+								"flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold",
+						}}
+					>
+						<Video size={20} />
+						<span className="font-medium">{m.douyin_tool()}</span>
+					</Link>
 
-          <Link
-            to="/speech-to-text"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
-            activeProps={{
-              className:
-                'flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold',
-            }}
-          >
-            <Mic size={20} />
-            <span className="font-medium">{m.speech_to_text()}</span>
-          </Link>
+					<Link
+						to="/speech-to-text"
+						onClick={() => setIsOpen(false)}
+						className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
+						activeProps={{
+							className:
+								"flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold",
+						}}
+					>
+						<Mic size={20} />
+						<span className="font-medium">{m.speech_to_text()}</span>
+					</Link>
 
-          <Link
-            to="/object-detection"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
-            activeProps={{
-              className:
-                'flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold',
-            }}
-          >
-            <Scan size={20} />
-            <span className="font-medium">{m.object_detection()}</span>
-          </Link>
+					<Link
+						to="/object-detection"
+						onClick={() => setIsOpen(false)}
+						className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
+						activeProps={{
+							className:
+								"flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold",
+						}}
+					>
+						<Scan size={20} />
+						<span className="font-medium">{m.object_detection()}</span>
+					</Link>
 
-          <Link
-            to="/live-photo-tool"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
-            activeProps={{
-              className:
-                'flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold',
-            }}
-          >
-            <Disc size={20} />
-            <span className="font-medium">{m.live_photo_tool()}</span>
-          </Link>
-        </nav>
+					<Link
+						to="/live-photo-tool"
+						onClick={() => setIsOpen(false)}
+						className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-colors mb-2"
+						activeProps={{
+							className:
+								"flex items-center gap-3 p-3 rounded-lg bg-primary text-primary-foreground transition-colors mb-2 font-bold",
+						}}
+					>
+						<Disc size={20} />
+						<span className="font-medium">{m.live_photo_tool()}</span>
+					</Link>
+				</nav>
 
-        <div className="p-4 border-t border-border flex flex-col gap-2">
-          <BetterAuthHeader />
-        </div>
-      </aside>
-    </>
-  )
+				<div className="p-4 border-t border-border flex flex-col gap-2">
+					<BetterAuthHeader />
+				</div>
+			</aside>
+		</>
+	);
 }

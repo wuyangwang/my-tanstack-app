@@ -1,33 +1,36 @@
-import { createRouter } from '@tanstack/react-router'
-import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
-import * as TanstackQuery from './integrations/tanstack-query/root-provider'
+import { createRouter } from "@tanstack/react-router";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
+import * as TanstackQuery from "./integrations/tanstack-query/root-provider";
 
-import { deLocalizeUrl, localizeUrl } from './paraglide/runtime'
+import { deLocalizeUrl, localizeUrl } from "./paraglide/runtime";
 
 // Import the generated route tree
-import { routeTree } from './routeTree.gen'
+import { routeTree } from "./routeTree.gen";
 
 // Create a new router instance
 export const getRouter = () => {
-  const rqContext = TanstackQuery.getContext()
+	const rqContext = TanstackQuery.getContext();
 
-  const router = createRouter({
-    routeTree,
-    context: {
-      ...rqContext,
-    },
+	const router = createRouter({
+		routeTree,
+		context: {
+			...rqContext,
+		},
 
-    // Paraglide URL rewrite docs: https://github.com/TanStack/router/tree/main/examples/react/i18n-paraglide#rewrite-url
-    rewrite: {
-      input: ({ url }) => deLocalizeUrl(url),
-      output: ({ url }) => localizeUrl(url),
-    },
+		// Paraglide URL rewrite docs: https://github.com/TanStack/router/tree/main/examples/react/i18n-paraglide#rewrite-url
+		rewrite: {
+			input: ({ url }) => deLocalizeUrl(url),
+			output: ({ url }) => localizeUrl(url),
+		},
 
-    defaultPreload: 'intent',
-    defaultNotFoundComponent: () => <div>找不到页面</div>,
-  })
+		defaultPreload: "intent",
+		defaultNotFoundComponent: () => <div>找不到页面</div>,
+	});
 
-  setupRouterSsrQueryIntegration({ router, queryClient: rqContext.queryClient })
+	setupRouterSsrQueryIntegration({
+		router,
+		queryClient: rqContext.queryClient,
+	});
 
-  return router
-}
+	return router;
+};

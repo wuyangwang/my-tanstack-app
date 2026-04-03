@@ -1,5 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Mic, Upload, Link as LinkIcon, FileText, Download, Loader2, Play, StopCircle } from "lucide-react";
+import {
+	Mic,
+	Upload,
+	Link as LinkIcon,
+	FileText,
+	Download,
+	Loader2,
+	Play,
+	StopCircle,
+} from "lucide-react";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,50 +22,59 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { exportToTxt, exportToJson } from "@/lib/audio-utils";
 import { useTranscription } from "@/hooks/use-transcription";
 import { useVConsole } from "@/hooks/use-log";
 
-
 export const Route = createFileRoute("/speech-to-text")({
 	component: SpeechToText,
 });
 
 function SpeechToText() {
-	const formatTimestamp = (value: unknown) => (
-		typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(2)}s` : "..."
-	);
+	const formatTimestamp = (value: unknown) =>
+		typeof value === "number" && Number.isFinite(value)
+			? `${value.toFixed(2)}s`
+			: "...";
 
 	const {
-		model, setModel,
-		task, setTask,
-		language, setLanguage,
+		model,
+		setModel,
+		task,
+		setTask,
+		language,
+		setLanguage,
 		transcribe,
 		loading,
 		status,
 		progress,
-		result
+		result,
 	} = useTranscription();
 
 	const [audioUrl, setAudioUrl] = useState("");
 	const [file, setFile] = useState<File | null>(null);
 	const [isRecording, setIsRecording] = useState(false);
 	const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
-	
+
 	const mediaRecorder = useRef<MediaRecorder | null>(null);
 	const audioChunks = useRef<Blob[]>([]);
 
-  useVConsole();
-  
+	useVConsole();
+
 	const handleUrlProcess = async () => {
 		if (!audioUrl) {
 			toast.error("请输入音频 URL");
 			return;
 		}
-		
+
 		try {
 			const response = await fetch(audioUrl);
 			if (!response.ok) throw new Error("下载失败");
@@ -102,7 +120,7 @@ function SpeechToText() {
 		if (mediaRecorder.current && isRecording) {
 			mediaRecorder.current.stop();
 			setIsRecording(false);
-			mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+			mediaRecorder.current.stream.getTracks().forEach((track) => track.stop());
 		}
 	};
 
@@ -140,71 +158,139 @@ function SpeechToText() {
 			<div className="grid gap-8 md:grid-cols-3">
 				<Card className="md:col-span-2 bg-card border-border text-foreground shadow-lg">
 					<CardHeader>
-						<CardTitle className="uppercase tracking-widest text-sm text-primary">音频输入</CardTitle>
-						<CardDescription className="text-muted-foreground text-lg">选择一种方式加载音频</CardDescription>
+						<CardTitle className="uppercase tracking-widest text-sm text-primary">
+							音频输入
+						</CardTitle>
+						<CardDescription className="text-muted-foreground text-lg">
+							选择一种方式加载音频
+						</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<Tabs defaultValue="file" className="w-full">
 							<TabsList className="grid w-full grid-cols-3 bg-muted border border-border p-1">
-								<TabsTrigger value="file" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><Upload className="mr-2 h-4 w-4" /> 文件</TabsTrigger>
-								<TabsTrigger value="url" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><LinkIcon className="mr-2 h-4 w-4" /> URL</TabsTrigger>
-								<TabsTrigger value="record" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"><Mic className="mr-2 h-4 w-4" /> 录音</TabsTrigger>
+								<TabsTrigger
+									value="file"
+									className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+								>
+									<Upload className="mr-2 h-4 w-4" /> 文件
+								</TabsTrigger>
+								<TabsTrigger
+									value="url"
+									className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+								>
+									<LinkIcon className="mr-2 h-4 w-4" /> URL
+								</TabsTrigger>
+								<TabsTrigger
+									value="record"
+									className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+								>
+									<Mic className="mr-2 h-4 w-4" /> 录音
+								</TabsTrigger>
 							</TabsList>
-							
+
 							<TabsContent value="file" className="space-y-4 pt-6">
 								<div className="grid w-full items-center gap-1.5">
-									<Label htmlFor="audio-file" className="text-muted-foreground">音频文件</Label>
-									<Input 
-										id="audio-file" 
-										type="file" 
-										accept="audio/*" 
+									<Label htmlFor="audio-file" className="text-muted-foreground">
+										音频文件
+									</Label>
+									<Input
+										id="audio-file"
+										type="file"
+										accept="audio/*"
 										onChange={(e) => setFile(e.target.files?.[0] || null)}
 										className="bg-background border-border focus-visible:ring-primary"
 									/>
 								</div>
-								<Button onClick={handleFileProcess} disabled={loading || !file} className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md">
-									{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+								<Button
+									onClick={handleFileProcess}
+									disabled={loading || !file}
+									className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md"
+								>
+									{loading ? (
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									) : (
+										<Play className="mr-2 h-4 w-4" />
+									)}
 									开始转换
 								</Button>
 							</TabsContent>
-							
+
 							<TabsContent value="url" className="space-y-4 pt-6">
 								<div className="grid w-full items-center gap-1.5">
-									<Label htmlFor="audio-url" className="text-muted-foreground">音频 URL</Label>
-									<Input 
-										id="audio-url" 
-										placeholder="https://example.com/audio.mp3" 
+									<Label htmlFor="audio-url" className="text-muted-foreground">
+										音频 URL
+									</Label>
+									<Input
+										id="audio-url"
+										placeholder="https://example.com/audio.mp3"
 										value={audioUrl}
 										onChange={(e) => setAudioUrl(e.target.value)}
 										className="bg-background border-border focus-visible:ring-primary"
 									/>
 								</div>
-								<Button onClick={handleUrlProcess} disabled={loading || !audioUrl} className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md">
-									{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+								<Button
+									onClick={handleUrlProcess}
+									disabled={loading || !audioUrl}
+									className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md"
+								>
+									{loading ? (
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									) : (
+										<Play className="mr-2 h-4 w-4" />
+									)}
 									开始转换
 								</Button>
 							</TabsContent>
-							
-							<TabsContent value="record" className="space-y-4 pt-6 text-center">
+
+							<TabsContent
+								value="record"
+								className="space-y-4 pt-6 text-center"
+							>
 								<div className="flex flex-col items-center justify-center space-y-4 py-4">
 									{isRecording ? (
-										<Button variant="destructive" size="lg" onClick={stopRecording} className="h-16 w-16 rounded-full animate-pulse shadow-lg shadow-destructive/20">
+										<Button
+											variant="destructive"
+											size="lg"
+											onClick={stopRecording}
+											className="h-16 w-16 rounded-full animate-pulse shadow-lg shadow-destructive/20"
+										>
 											<StopCircle className="h-8 w-8" />
 										</Button>
 									) : (
-										<Button variant="outline" size="lg" onClick={startRecording} className="h-16 w-16 rounded-full border-primary/20 hover:bg-primary hover:text-primary-foreground shadow-sm transition-all">
+										<Button
+											variant="outline"
+											size="lg"
+											onClick={startRecording}
+											className="h-16 w-16 rounded-full border-primary/20 hover:bg-primary hover:text-primary-foreground shadow-sm transition-all"
+										>
 											<Mic className="h-8 w-8" />
 										</Button>
 									)}
 									<p className="text-sm text-muted-foreground">
-										{isRecording ? "正在录音..." : recordingBlob ? "录音已完成" : "点击麦克风开始录音"}
+										{isRecording
+											? "正在录音..."
+											: recordingBlob
+												? "录音已完成"
+												: "点击麦克风开始录音"}
 									</p>
 									{recordingBlob && !isRecording && (
-										<audio controls src={URL.createObjectURL(recordingBlob)} className="w-full" />
+										<audio
+											controls
+											src={URL.createObjectURL(recordingBlob)}
+											className="w-full"
+										/>
 									)}
 								</div>
-								<Button onClick={handleRecordingProcess} disabled={loading || !recordingBlob || isRecording} className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md">
-									{loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+								<Button
+									onClick={handleRecordingProcess}
+									disabled={loading || !recordingBlob || isRecording}
+									className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-md"
+								>
+									{loading ? (
+										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									) : (
+										<Play className="mr-2 h-4 w-4" />
+									)}
 									转换录音
 								</Button>
 							</TabsContent>
@@ -214,8 +300,12 @@ function SpeechToText() {
 
 				<Card className="bg-card border-border text-foreground shadow-lg">
 					<CardHeader>
-						<CardTitle className="uppercase tracking-widest text-sm text-primary">配置</CardTitle>
-						<CardDescription className="text-muted-foreground">模型和任务设置</CardDescription>
+						<CardTitle className="uppercase tracking-widest text-sm text-primary">
+							配置
+						</CardTitle>
+						<CardDescription className="text-muted-foreground">
+							模型和任务设置
+						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="space-y-2">
@@ -225,19 +315,34 @@ function SpeechToText() {
 									<SelectValue placeholder="选择模型" />
 								</SelectTrigger>
 								<SelectContent className="bg-card border-border text-foreground">
-									<SelectItem value="onnx-community/whisper-tiny">Whisper Tiny (极快)</SelectItem>
-									<SelectItem value="onnx-community/whisper-base">Whisper Base (中等)</SelectItem>
-									<SelectItem value="onnx-community/whisper-small">Whisper Small (准)</SelectItem>
-									<SelectItem value="onnx-community/moonshine-tiny-zh-ONNX">moonshine-tiny-zh</SelectItem>
-									<SelectItem value="onnx-community/moonshine-base-zh-ONNX">moonshine-base-zh</SelectItem>
-									<SelectItem value="onnx-community/ipa-whisper-base-ONNX">Whisper Base (IPA ONNX)</SelectItem>
+									<SelectItem value="onnx-community/whisper-tiny">
+										Whisper Tiny (极快)
+									</SelectItem>
+									<SelectItem value="onnx-community/whisper-base">
+										Whisper Base (中等)
+									</SelectItem>
+									<SelectItem value="onnx-community/whisper-small">
+										Whisper Small (准)
+									</SelectItem>
+									<SelectItem value="onnx-community/moonshine-tiny-zh-ONNX">
+										moonshine-tiny-zh
+									</SelectItem>
+									<SelectItem value="onnx-community/moonshine-base-zh-ONNX">
+										moonshine-base-zh
+									</SelectItem>
+									<SelectItem value="onnx-community/ipa-whisper-base-ONNX">
+										Whisper Base (IPA ONNX)
+									</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
 
 						<div className="space-y-2">
 							<Label className="text-muted-foreground">识别语言</Label>
-							<Select value={language as string} onValueChange={(v) => setLanguage(v as any)}>
+							<Select
+								value={language as string}
+								onValueChange={(v) => setLanguage(v as any)}
+							>
 								<SelectTrigger className="bg-background border-border focus:ring-primary">
 									<SelectValue placeholder="选择语言" />
 								</SelectTrigger>
@@ -251,18 +356,21 @@ function SpeechToText() {
 						<div className="flex items-center justify-between pt-2">
 							<div className="space-y-0.5">
 								<Label className="text-muted-foreground">翻译为英文</Label>
-								<p className="text-[0.7rem] text-muted-foreground">将语音翻译为英文</p>
+								<p className="text-[0.7rem] text-muted-foreground">
+									将语音翻译为英文
+								</p>
 							</div>
-							<Switch 
-								checked={task === "translate"} 
-								onCheckedChange={(checked) => setTask(checked ? "translate" : "transcribe")}
+							<Switch
+								checked={task === "translate"}
+								onCheckedChange={(checked) =>
+									setTask(checked ? "translate" : "transcribe")
+								}
 								className="data-[state=checked]:bg-primary"
 							/>
 						</div>
 					</CardContent>
 				</Card>
 			</div>
-
 
 			{loading && (
 				<Card>
@@ -271,7 +379,7 @@ function SpeechToText() {
 							<Loader2 className="h-10 w-10 animate-spin text-primary" />
 							<p className="mt-4 font-medium">{status}</p>
 						</div>
-						
+
 						{Object.keys(progress).length > 0 && (
 							<div className="w-full max-w-md space-y-4">
 								{Object.entries(progress).map(([file, p]) => (
@@ -285,9 +393,10 @@ function SpeechToText() {
 								))}
 							</div>
 						)}
-						
+
 						<p className="text-sm text-muted-foreground text-center">
-							首次加载模型可能需要一些时间 (40MB - 1GB+)，之后会从浏览器缓存读取。建议使用 WebGPU 加速。
+							首次加载模型可能需要一些时间 (40MB -
+							1GB+)，之后会从浏览器缓存读取。建议使用 WebGPU 加速。
 						</p>
 					</CardContent>
 				</Card>
@@ -311,16 +420,24 @@ function SpeechToText() {
 					</CardHeader>
 					<CardContent>
 						<div className="rounded-md bg-muted p-4">
-							<p className="whitespace-pre-wrap leading-relaxed">{result.text}</p>
+							<p className="whitespace-pre-wrap leading-relaxed">
+								{result.text}
+							</p>
 						</div>
 						{result.chunks && (
 							<div className="mt-6 space-y-4">
-								<h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">时间戳详情</h3>
+								<h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+									时间戳详情
+								</h3>
 								<div className="grid gap-2">
 									{result.chunks.map((chunk: any, i: number) => (
-										<div key={i} className="flex gap-4 text-sm border-b pb-2 last:border-0">
+										<div
+											key={i}
+											className="flex gap-4 text-sm border-b pb-2 last:border-0"
+										>
 											<span className="font-mono text-muted-foreground w-24 shrink-0">
-												[{formatTimestamp(chunk.timestamp?.[0])} - {formatTimestamp(chunk.timestamp?.[1])}]
+												[{formatTimestamp(chunk.timestamp?.[0])} -{" "}
+												{formatTimestamp(chunk.timestamp?.[1])}]
 											</span>
 											<span>{chunk.text}</span>
 										</div>

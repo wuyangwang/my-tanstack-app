@@ -52,13 +52,13 @@ function DouyinTool() {
 		toast.success("已复制到剪贴板");
 	};
 
-  // header中no-referrer
-  const onPreviewClick = (url: string) => {
+	// header中no-referrer
+	const onPreviewClick = (url: string) => {
 		window.open(url, "_blank", "noreferrer");
 	};
 
-  // 下载视频
-  const onDownloadClick = (result: DouyinVideoInfo,key:"wm_url"|"url") => {
+	// 下载视频
+	const onDownloadClick = (result: DouyinVideoInfo, key: "wm_url" | "url") => {
 		const a = document.createElement("a");
 		a.href = result[key];
 		a.download = result.video_id + ".mp4";
@@ -78,7 +78,9 @@ function DouyinTool() {
 
 			<Card className="bg-card border-border text-foreground shadow-lg">
 				<CardHeader>
-					<CardTitle className="uppercase tracking-widest text-sm text-primary">粘贴分享链接</CardTitle>
+					<CardTitle className="uppercase tracking-widest text-sm text-primary">
+						粘贴分享链接
+					</CardTitle>
 					<CardDescription className="text-muted-foreground">
 						在此粘贴从抖音 App 复制的分享文本或链接
 					</CardDescription>
@@ -134,9 +136,11 @@ function DouyinTool() {
 						<CardContent className="space-y-4 pt-6">
 							<div className="grid gap-4 sm:grid-cols-2">
 								<div className="space-y-2">
-									<p className="font-medium text-sm text-foreground">无水印视频</p>
+									<p className="font-medium text-sm text-foreground">
+										无水印视频
+									</p>
 									<div className="flex gap-2">
-                    {/* <Button
+										{/* <Button
 											variant="outline"
 											className="flex-1 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
 											onClick={() => onDownloadClick(result,"url")}
@@ -146,7 +150,7 @@ function DouyinTool() {
 										<Button
 											variant="outline"
 											className="flex-1 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
-											onClick={() => onPreviewClick(result.url,)}
+											onClick={() => onPreviewClick(result.url)}
 										>
 											<ExternalLink className="mr-2 h-4 w-4" /> 预览并下载
 										</Button>
@@ -160,7 +164,9 @@ function DouyinTool() {
 									</div>
 								</div>
 								<div className="space-y-2">
-									<p className="font-medium text-sm text-foreground">有水印视频</p>
+									<p className="font-medium text-sm text-foreground">
+										有水印视频
+									</p>
 									<div className="flex gap-2">
 										{/* <Button
 											variant="outline"
