@@ -12,8 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpeechToTextRouteImport } from './routes/speech-to-text'
 import { Route as ObjectDetectionRouteImport } from './routes/object-detection'
 import { Route as LivePhotoToolRouteImport } from './routes/live-photo-tool'
-import { Route as GithubRankIndexRouteImport } from './routes/github-rank/index'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GithubRankIndexRouteImport } from './routes/github-rank/index'
 import { Route as DouyinToolIndexRouteImport } from './routes/douyin-tool/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -33,14 +33,14 @@ const LivePhotoToolRoute = LivePhotoToolRouteImport.update({
   path: '/live-photo-tool',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GithubRankIndexRoute = GithubRankIndexRouteImport.update({
-  id: '/github-rank/',
-  path: '/github-rank/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GithubRankIndexRoute = GithubRankIndexRouteImport.update({
+  id: '/github-rank/',
+  path: '/github-rank/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DouyinToolIndexRoute = DouyinToolIndexRouteImport.update({
@@ -61,32 +61,32 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/github-rank/': typeof GithubRankIndexRoute
   '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool/': typeof DouyinToolIndexRoute
+  '/github-rank/': typeof GithubRankIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/github-rank': typeof GithubRankIndexRoute
   '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool': typeof DouyinToolIndexRoute
+  '/github-rank': typeof GithubRankIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/github-rank/': typeof GithubRankIndexRoute
   '/live-photo-tool': typeof LivePhotoToolRoute
   '/object-detection': typeof ObjectDetectionRoute
   '/speech-to-text': typeof SpeechToTextRoute
   '/douyin-tool/': typeof DouyinToolIndexRoute
+  '/github-rank/': typeof GithubRankIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
@@ -94,42 +94,42 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/github-rank/'
     | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
     | '/douyin-tool/'
+    | '/github-rank/'
     | '/api/auth/$'
     | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/github-rank'
     | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
     | '/douyin-tool'
+    | '/github-rank'
     | '/api/auth/$'
     | '/api/trpc/$'
   id:
     | '__root__'
     | '/'
-    | '/github-rank/'
     | '/live-photo-tool'
     | '/object-detection'
     | '/speech-to-text'
     | '/douyin-tool/'
+    | '/github-rank/'
     | '/api/auth/$'
     | '/api/trpc/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  GithubRankIndexRoute: typeof GithubRankIndexRoute
   LivePhotoToolRoute: typeof LivePhotoToolRoute
   ObjectDetectionRoute: typeof ObjectDetectionRoute
   SpeechToTextRoute: typeof SpeechToTextRoute
   DouyinToolIndexRoute: typeof DouyinToolIndexRoute
+  GithubRankIndexRoute: typeof GithubRankIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
@@ -157,18 +157,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LivePhotoToolRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/github-rank/': {
-      id: '/github-rank/'
-      path: '/github-rank'
-      fullPath: '/github-rank/'
-      preLoaderRoute: typeof GithubRankIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/github-rank/': {
+      id: '/github-rank/'
+      path: '/github-rank'
+      fullPath: '/github-rank/'
+      preLoaderRoute: typeof GithubRankIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/douyin-tool/': {
@@ -197,11 +197,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  GithubRankIndexRoute: GithubRankIndexRoute,
   LivePhotoToolRoute: LivePhotoToolRoute,
   ObjectDetectionRoute: ObjectDetectionRoute,
   SpeechToTextRoute: SpeechToTextRoute,
   DouyinToolIndexRoute: DouyinToolIndexRoute,
+  GithubRankIndexRoute: GithubRankIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }

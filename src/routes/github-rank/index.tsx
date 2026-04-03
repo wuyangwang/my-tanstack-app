@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ExternalLink, Loader2 } from "lucide-react";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
 	Select,
 	SelectContent,
@@ -22,33 +21,19 @@ export const Route = createFileRoute("/github-rank/")({
 	component: GithubRankPage,
 });
 
-const DEFAULT_OWNER = "tanstack";
-
 function GithubRankPage() {
-	const [ownerInput, setOwnerInput] = useState(DEFAULT_OWNER);
-	const [owner, setOwner] = useState(DEFAULT_OWNER);
 	const [sortKey, setSortKey] = useState<GithubRankSortKey>("stars");
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [rows, setRows] = useState<GithubRepoMetrics[]>([]);
 
-	const loadRepos = async (nextOwner: string) => {
-		const trimmedOwner = nextOwner.trim();
-		if (!trimmedOwner) {
-			setError(m.github_rank_error());
-			setRows([]);
-			return;
-		}
-
+	const loadRepos = async () => {
 		setLoading(true);
 		setError("");
 
 		try {
-			const result = await fetchGithubRepoMetrics({
-				data: { owner: trimmedOwner },
-			});
+			const result = await fetchGithubRepoMetrics();
 			setRows(result);
-			setOwner(trimmedOwner);
 		} catch (fetchError) {
 			console.error(fetchError);
 			setRows([]);
@@ -63,7 +48,7 @@ function GithubRankPage() {
 	};
 
 	useEffect(() => {
-		void loadRepos(DEFAULT_OWNER);
+		void loadRepos();
 	}, []);
 
 	const sortedRows = useMemo(() => {
@@ -85,11 +70,6 @@ function GithubRankPage() {
 		});
 	}, [rows, sortKey]);
 
-	const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		void loadRepos(ownerInput);
-	};
-
 	return (
 		<div className="container mx-auto max-w-6xl space-y-8 px-4 py-20">
 			<div className="space-y-3 text-center">
@@ -105,45 +85,34 @@ function GithubRankPage() {
 				<CardHeader>
 					<CardTitle>{m.github_rank_fetch()}</CardTitle>
 				</CardHeader>
-				<CardContent>
-					<form
-						onSubmit={onSubmit}
-						className="grid gap-4 md:grid-cols-[1fr_auto_auto]"
+				<CardContent className="flex flex-col gap-4 md:flex-row md:items-center">
+					<Select
+						value={sortKey}
+						onValueChange={(value) => setSortKey(value as GithubRankSortKey)}
 					>
-						<Input
-							value={ownerInput}
-							onChange={(event) => setOwnerInput(event.target.value)}
-							placeholder={m.github_rank_owner_placeholder()}
-							aria-label={m.github_rank_owner()}
-						/>
-						<Select
-							value={sortKey}
-							onValueChange={(value) => setSortKey(value as GithubRankSortKey)}
-						>
-							<SelectTrigger className="w-full md:w-[200px]">
-								<SelectValue placeholder={m.github_rank_sort_by()} />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="stars">{m.github_rank_stars()}</SelectItem>
-								<SelectItem value="commitCount">
-									{m.github_rank_commits()}
-								</SelectItem>
-								<SelectItem value="contributorCount">
-									{m.github_rank_contributors()}
-								</SelectItem>
-							</SelectContent>
-						</Select>
-						<Button type="submit" disabled={loading}>
-							{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-							{m.github_rank_fetch()}
-						</Button>
-					</form>
+						<SelectTrigger className="w-full md:w-[240px]">
+							<SelectValue placeholder={m.github_rank_sort_by()} />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="stars">{m.github_rank_stars()}</SelectItem>
+							<SelectItem value="commitCount">
+								{m.github_rank_commits()}
+							</SelectItem>
+							<SelectItem value="contributorCount">
+								{m.github_rank_contributors()}
+							</SelectItem>
+						</SelectContent>
+					</Select>
+					<Button
+						type="button"
+						disabled={loading}
+						onClick={() => void loadRepos()}
+					>
+						{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+						{m.github_rank_fetch()}
+					</Button>
 				</CardContent>
 			</Card>
-
-			<div className="text-sm text-muted-foreground">
-				{m.github_rank_owner()}: <span className="font-semibold">{owner}</span>
-			</div>
 
 			{loading && (
 				<div className="flex items-center gap-2 text-muted-foreground">
@@ -196,7 +165,7 @@ function GithubRankPage() {
 											rel="noreferrer"
 											className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
 										>
-											{repo.name}
+											{repo.fullName}
 											<ExternalLink className="h-3.5 w-3.5" />
 										</a>
 									</td>

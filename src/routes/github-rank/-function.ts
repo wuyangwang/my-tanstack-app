@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 
 const GITHUB_API_BASE = "https://api.github.com";
-const MAX_REPOS = 20;
+const MAX_REPOS = 100;
 const METRICS_CONCURRENCY = 4;
 
 export type GithubRankSortKey = "stars" | "commitCount" | "contributorCount";
 
 export interface GithubRepoMetrics {
+	fullName: string;
 	name: string;
 	htmlUrl: string;
 	stars: number;
@@ -16,11 +17,16 @@ export interface GithubRepoMetrics {
 }
 
 interface GithubRepo {
+	full_name: string;
 	name: string;
 	html_url: string;
 	stargazers_count: number;
 	default_branch: string;
 	updated_at: string;
+}
+
+interface GithubSearchResponse {
+	items: GithubRepo[];
 }
 
 const parseLastPage = (linkHeader: string | null): number | null => {
@@ -133,40 +139,40 @@ const mapWithConcurrency = async <T, R>(
 	return results;
 };
 
-export const fetchGithubRepoMetrics = createServerFn({ method: "POST" })
-	.inputValidator((data: { owner: string }) => data)
-	.handler(async ({ data }) => {
-		const owner = data.owner.trim();
-		if (!owner) {
-			throw new Error("Owner is required.");
-		}
+export const fetchGithubRepoMetrics = createServerFn({
+	method: "POST",
+}).handler(async () => {
+	const searchResult = await fetchJson<GithubSearchResponse>(
+		`${GITHUB_API_BASE}/search/repositories?q=stars:%3E1&sort=stars&order=desc&per_page=${MAX_REPOS}&page=1`,
+	);
+	const repos = searchResult.items;
 
-		const repos = await fetchJson<GithubRepo[]>(
-			`${GITHUB_API_BASE}/users/${encodeURIComponent(owner)}/repos?per_page=${MAX_REPOS}&sort=updated&type=public`,
-		);
+	const metricRows = await mapWithConcurrency(
+		repos,
+		METRICS_CONCURRENCY,
+		async (repo): Promise<GithubRepoMetrics> => {
+			const repoPath = repo.full_name
+				.split("/")
+				.map((segment) => encodeURIComponent(segment))
+				.join("/");
+			const commitCount = await fetchPaginatedCount(
+				`${GITHUB_API_BASE}/repos/${repoPath}/commits?per_page=1&sha=${encodeURIComponent(repo.default_branch)}`,
+			);
+			const contributorCount = await fetchPaginatedCount(
+				`${GITHUB_API_BASE}/repos/${repoPath}/contributors?per_page=1&anon=1`,
+			);
 
-		const metricRows = await mapWithConcurrency(
-			repos,
-			METRICS_CONCURRENCY,
-			async (repo): Promise<GithubRepoMetrics> => {
-				const repoPath = `${encodeURIComponent(owner)}/${encodeURIComponent(repo.name)}`;
-				const commitCount = await fetchPaginatedCount(
-					`${GITHUB_API_BASE}/repos/${repoPath}/commits?per_page=1&sha=${encodeURIComponent(repo.default_branch)}`,
-				);
-				const contributorCount = await fetchPaginatedCount(
-					`${GITHUB_API_BASE}/repos/${repoPath}/contributors?per_page=1&anon=1`,
-				);
+			return {
+				fullName: repo.full_name,
+				name: repo.name,
+				htmlUrl: repo.html_url,
+				stars: repo.stargazers_count,
+				commitCount,
+				contributorCount,
+				updatedAt: repo.updated_at,
+			};
+		},
+	);
 
-				return {
-					name: repo.name,
-					htmlUrl: repo.html_url,
-					stars: repo.stargazers_count,
-					commitCount,
-					contributorCount,
-					updatedAt: repo.updated_at,
-				};
-			},
-		);
-
-		return metricRows;
-	});
+	return metricRows;
+});
