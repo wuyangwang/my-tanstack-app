@@ -34,6 +34,7 @@ interface GithubRepo {
 	};
 	default_branch: string;
 	updated_at: string;
+	topics?: string[];
 }
 
 interface GithubSearchResponse {
@@ -88,11 +89,24 @@ const fetchJson = async <T>(url: string): Promise<T> => {
 export const fetchGithubRepoMetrics = createServerFn({
 	method: "POST",
 }).handler(async () => {
+	const CACHE_KEY = "github-rank-repos";
+	const CACHE_TTL = 7200; // 2 hours in seconds
+
+	try {
+		// @ts-ignore - env is provided by Cloudflare environment
+		const cached = await env.RepoStar.get(CACHE_KEY, "json");
+		if (cached) {
+			return cached as GithubRepoMetrics[];
+		}
+	} catch (e) {
+		console.error("KV Cache Read Error:", e);
+	}
+
 	const searchResult = await fetchJson<GithubSearchResponse>(
 		`${GITHUB_API_BASE}/search/repositories?q=stars:%3E1&sort=stars&order=desc&per_page=${MAX_REPOS}&page=1`,
 	);
 
-	return searchResult.items
+	const metrics = searchResult.items
 		.sort((a, b) => b.stargazers_count - a.stargazers_count)
 		.slice(0, MAX_REPOS)
 		.map(
@@ -110,4 +124,15 @@ export const fetchGithubRepoMetrics = createServerFn({
 				updatedAt: repo.updated_at,
 			}),
 		);
+
+	try {
+		// @ts-ignore - env is provided by Cloudflare environment
+		await env.RepoStar.put(CACHE_KEY, JSON.stringify(metrics), {
+			expirationTtl: CACHE_TTL,
+		});
+	} catch (e) {
+		console.error("KV Cache Write Error:", e);
+	}
+
+	return metrics;
 });
