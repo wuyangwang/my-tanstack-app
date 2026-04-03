@@ -27,5 +27,6 @@ Follow Conventional Commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, and
 Never commit secrets. Keep sensitive values in `.env.local`, and maintain `.env.example` with safe placeholders. Validate Wrangler and database configuration before running deploy or migration commands.
 
 ## Agent Preferences
-- If code is modified, do not run tests or formatting unless the user explicitly asks for it.
+- If code is modified, run `npm run format` after changes are made.
+- If code is modified, create a commit and push it to the remote branch.
 - Before running `git commit`, provide a brief summary of the proposed commit message.
