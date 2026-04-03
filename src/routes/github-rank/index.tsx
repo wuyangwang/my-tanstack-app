@@ -10,15 +10,6 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import {
 	Table,
 	TableBody,
@@ -69,39 +60,12 @@ function GithubRankPage() {
 	);
 
 	return (
-		<div className="container mx-auto max-w-6xl space-y-8 px-4 py-20">
+		<div className="container mx-auto max-w-6xl space-y-8 px-4 py-10">
 			<div className="space-y-3 text-center">
 				<h1 className="font-black text-4xl text-primary uppercase tracking-tighter md:text-6xl">
 					{m.github_rank_title()}
 				</h1>
-				<p className="mx-auto max-w-3xl text-muted-foreground text-lg">
-					{m.github_rank_subtitle()}
-				</p>
 			</div>
-
-			<Card>
-				<CardHeader>
-					<CardTitle>{m.github_rank_fetch()}</CardTitle>
-				</CardHeader>
-				<CardContent className="flex flex-col gap-4 md:flex-row md:items-center">
-					<Select value="stars" disabled>
-						<SelectTrigger className="w-full md:w-[240px]">
-							<SelectValue placeholder={m.github_rank_sort_by()} />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="stars">{m.github_rank_stars()}</SelectItem>
-						</SelectContent>
-					</Select>
-					<Button
-						type="button"
-						disabled={loading}
-						onClick={() => void loadRepos()}
-					>
-						{loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-						{m.github_rank_fetch()}
-					</Button>
-				</CardContent>
-			</Card>
 
 			{loading && (
 				<div className="flex items-center gap-2 text-muted-foreground">
