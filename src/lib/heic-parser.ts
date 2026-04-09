@@ -14,6 +14,9 @@ export interface HeicDiagnostics {
 	containerStarts: number[];
 	videoContainerStart: number | null;
 	decodedFrameCount: number;
+	mdatItemCount: number;
+	mdatDecodedFrameCount: number;
+	usingMdatFramesForVideo: boolean;
 	decodeFallback: boolean;
 	synthesizedVideoFromSequence: boolean;
 }
@@ -50,6 +53,11 @@ interface DecodeFramesResult {
 	decodeFallback: boolean;
 }
 
+interface MdatFrameExtractionResult {
+	frames: Blob[];
+	totalItems: number;
+}
+
 export interface ParsedLivePhoto {
 	photoBlob: Blob;
 	photoUrl: string;
@@ -79,6 +87,7 @@ export async function parseHeicContainer(
 ): Promise<HeicParseResult> {
 	const data = new Uint8Array(buffer);
 	const structure = detectHeicStructure(data);
+	const mdatExtraction = await extractImageFramesFromMdatItems(data);
 	let photoBlob: Blob = file;
 	let videoBlob: Blob | null = null;
 
@@ -111,15 +120,21 @@ export async function parseHeicContainer(
 		photoBlob = decodedFrames.firstFrame;
 	}
 
+	const preferredFramesForVideo =
+		mdatExtraction.frames.length > 1
+			? mdatExtraction.frames
+			: decodedFrames.allFrames;
+	const usingMdatFramesForVideo = mdatExtraction.frames.length > 1;
+
 	const shouldEncodeSequenceMp4 =
 		!videoBlob &&
-		decodedFrames.allFrames.length > 1 &&
+		preferredFramesForVideo.length > 1 &&
 		(structure.hasItemStructure ||
 			structure.majorBrand === "msf1" ||
 			structure.majorBrand === "heic");
 
 	if (shouldEncodeSequenceMp4) {
-		videoBlob = await encodeFrameSequenceToMp4(decodedFrames.allFrames, 12);
+		videoBlob = await encodeFrameSequenceToMp4(preferredFramesForVideo, 12);
 	}
 	const synthesizedVideoFromSequence = shouldEncodeSequenceMp4 && !!videoBlob;
 
@@ -142,6 +157,9 @@ export async function parseHeicContainer(
 			videoContainerStart: structure.videoContainerStart,
 			hasVideoBlob: !!videoBlob,
 			decodedFrameCount: decodedFrames.allFrames.length,
+			mdatItemCount: mdatExtraction.totalItems,
+			mdatDecodedFrameCount: mdatExtraction.frames.length,
+			usingMdatFramesForVideo,
 			hasImageSequence: decodedFrames.allFrames.length > 1,
 			synthesizedVideoFromSequence,
 			decodeFallback: decodedFrames.decodeFallback,
@@ -160,6 +178,9 @@ export async function parseHeicContainer(
 			containerStarts: structure.containerStarts,
 			videoContainerStart: structure.videoContainerStart,
 			decodedFrameCount: decodedFrames.allFrames.length,
+			mdatItemCount: mdatExtraction.totalItems,
+			mdatDecodedFrameCount: mdatExtraction.frames.length,
+			usingMdatFramesForVideo,
 			decodeFallback: decodedFrames.decodeFallback,
 			synthesizedVideoFromSequence,
 		},
@@ -744,6 +765,49 @@ export function extractHeifItemsFromMdat(
 	return extracted;
 }
 
+async function extractImageFramesFromMdatItems(
+	data: Uint8Array,
+): Promise<MdatFrameExtractionResult> {
+	if (typeof window === "undefined") {
+		return {
+			frames: [],
+			totalItems: 0,
+		};
+	}
+
+	const items = extractHeifItemsFromMdat(data)
+		.filter((item) => item.inMdat && item.length >= 64)
+		.sort((a, b) => a.absoluteOffset - b.absoluteOffset);
+	if (!items.length) {
+		return {
+			frames: [],
+			totalItems: 0,
+		};
+	}
+
+	const frames: Blob[] = [];
+	for (const item of items) {
+		const mime = detectEmbeddedImageMime(item.bytes);
+		if (!mime) {
+			continue;
+		}
+
+		const normalizedBytes = new Uint8Array(item.bytes.byteLength);
+		normalizedBytes.set(item.bytes);
+		const blob = new Blob([normalizedBytes], { type: mime });
+		if (!(await canDecodeImageBlob(blob))) {
+			continue;
+		}
+
+		frames.push(blob);
+	}
+
+	return {
+		frames,
+		totalItems: items.length,
+	};
+}
+
 interface IlocExtent {
 	offset: number;
 	length: number;
@@ -912,4 +976,46 @@ function readUintVariable(
 		value = value * 256 + view.getUint8(offset + i);
 	}
 	return value;
+}
+
+function detectEmbeddedImageMime(bytes: Uint8Array): string | null {
+	if (bytes.length < 12) {
+		return null;
+	}
+
+	if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+		return "image/jpeg";
+	}
+
+	if (
+		bytes[0] === 0x89 &&
+		bytes[1] === 0x50 &&
+		bytes[2] === 0x4e &&
+		bytes[3] === 0x47
+	) {
+		return "image/png";
+	}
+
+	if (readAscii(bytes, 0, 4) === "RIFF" && readAscii(bytes, 8, 4) === "WEBP") {
+		return "image/webp";
+	}
+
+	if (readAscii(bytes, 4, 4) === "ftyp") {
+		const brand = readAscii(bytes, 8, 4);
+		if (brand === "avif" || brand === "avis") {
+			return "image/avif";
+		}
+	}
+
+	return null;
+}
+
+async function canDecodeImageBlob(blob: Blob): Promise<boolean> {
+	try {
+		const bitmap = await createImageBitmap(blob);
+		bitmap.close();
+		return true;
+	} catch {
+		return false;
+	}
 }
