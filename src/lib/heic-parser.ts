@@ -121,6 +121,23 @@ export async function parseHeicContainer(
 		synthesizedVideoFromSequence,
 	});
 
+	console.info(
+		`${LOG_TAG} parse summary`,
+		JSON.stringify({
+			fileName: file.name,
+			kind,
+			majorBrand: structure.majorBrand,
+			hasItemStructure: structure.hasItemStructure,
+			hasTrackStructure: structure.hasTrackStructure,
+			videoContainerStart: structure.videoContainerStart,
+			hasVideoBlob: !!videoBlob,
+			decodedFrameCount: decodedFrames.allFrames.length,
+			hasImageSequence: decodedFrames.allFrames.length > 1,
+			synthesizedVideoFromSequence,
+			decodeFallback: decodedFrames.decodeFallback,
+		}),
+	);
+
 	return {
 		kind,
 		photoBlob,
@@ -142,21 +159,25 @@ export async function parseHeicContainer(
 export function detectHeicStructure(data: Uint8Array): HeicStructure {
 	const majorBrand = readMajorBrandAtStart(data, 0);
 	const hasMeta = findPattern(data, [0x6d, 0x65, 0x74, 0x61]) >= 0; // meta
-	const hasMoov = findPattern(data, [0x6d, 0x6f, 0x6f, 0x76]) >= 0; // moov
-	const hasTrak = findPattern(data, [0x74, 0x72, 0x61, 0x6b]) >= 0; // trak
 	const hasItemStructure =
 		hasMeta &&
 		(findPattern(data, [0x69, 0x69, 0x6e, 0x66]) >= 0 || // iinf
 			findPattern(data, [0x69, 0x6c, 0x6f, 0x63]) >= 0 || // iloc
 			findPattern(data, [0x69, 0x70, 0x72, 0x70]) >= 0); // iprp
 	const containerStarts = collectIsoContainerStarts(data);
+	const containerProbes = inspectIsoContainers(data, containerStarts);
+	const primaryProbe = containerProbes[0] ?? null;
 	const videoContainerStart =
-		pickLikelyVideoStart(data, containerStarts) ?? pickTailFtypVideoStart(data);
+		pickLikelyVideoStart(data, containerProbes) ?? pickTailFtypVideoStart(data);
 
 	return {
 		majorBrand,
 		hasMeta,
-		hasTrackStructure: hasMoov && hasTrak,
+		hasTrackStructure: !!(
+			primaryProbe &&
+			primaryProbe.hasMoov &&
+			primaryProbe.trackCount > 0
+		),
 		hasItemStructure,
 		containerStarts,
 		videoContainerStart,
@@ -199,7 +220,6 @@ async function hasVideoTrackByMediabunny(videoBlob: Blob): Promise<boolean> {
 			source: new BlobSource(videoBlob),
 			formats: ALL_FORMATS,
 		});
-		await input.ready;
 		const track = await input.getPrimaryVideoTrack();
 		input.dispose();
 		return !!track;
@@ -340,21 +360,182 @@ function collectIsoContainerStarts(data: Uint8Array): number[] {
 	return [...new Set(starts)].sort((a, b) => a - b);
 }
 
-function pickLikelyVideoStart(
+interface IsoContainerProbe {
+	start: number;
+	end: number;
+	majorBrand: string | null;
+	hasMoov: boolean;
+	hasMdat: boolean;
+	hasVideoTrack: boolean;
+	trackCount: number;
+}
+
+interface IsoBoxInfo {
+	start: number;
+	size: number;
+	headerSize: number;
+	type: string;
+	dataStart: number;
+	end: number;
+}
+
+function inspectIsoContainers(
 	data: Uint8Array,
 	starts: number[],
-): number | null {
-	const sorted = [...new Set(starts)].sort((a, b) => a - b);
-	for (let i = sorted.length - 1; i >= 1; i--) {
-		const start = sorted[i];
-		const brand = readMajorBrandAtStart(data, start);
-		if (!brand || isHeifBrand(brand)) continue;
+): IsoContainerProbe[] {
+	if (!starts.length) {
+		return [];
+	}
 
-		if (isLikelyVideoBrand(brand) || hasVideoBoxSignature(data, start)) {
-			return start;
+	const sorted = [...new Set(starts)].sort((a, b) => a - b);
+	return sorted.map((start, index) => {
+		const nextStart = sorted[index + 1] ?? data.length;
+		return inspectIsoContainer(data, start, nextStart);
+	});
+}
+
+function inspectIsoContainer(
+	data: Uint8Array,
+	start: number,
+	endExclusive: number,
+): IsoContainerProbe {
+	const end = Math.max(start, Math.min(endExclusive, data.length));
+	const topLevelBoxes = scanIsoBoxes(data, start, end);
+	let hasMoov = false;
+	let hasMdat = false;
+	let hasVideoTrack = false;
+	let trackCount = 0;
+
+	for (const box of topLevelBoxes) {
+		if (box.type === "mdat") {
+			hasMdat = true;
+			continue;
+		}
+		if (box.type !== "moov") {
+			continue;
+		}
+
+		hasMoov = true;
+		const moovBoxes = scanIsoBoxes(data, box.dataStart, box.end);
+		for (const moovBox of moovBoxes) {
+			if (moovBox.type !== "trak") {
+				continue;
+			}
+			trackCount++;
+			const handlerType = findTrackHandlerType(data, moovBox);
+			if (handlerType === "vide") {
+				hasVideoTrack = true;
+			}
+		}
+	}
+
+	return {
+		start,
+		end,
+		majorBrand: readMajorBrandAtStart(data, start),
+		hasMoov,
+		hasMdat,
+		hasVideoTrack,
+		trackCount,
+	};
+}
+
+function pickLikelyVideoStart(
+	data: Uint8Array,
+	probes: IsoContainerProbe[],
+): number | null {
+	for (let i = probes.length - 1; i >= 1; i--) {
+		const probe = probes[i];
+		if (!probe.hasVideoTrack || !probe.hasMdat) {
+			continue;
+		}
+
+		if (
+			(probe.majorBrand && isLikelyVideoBrand(probe.majorBrand)) ||
+			(probe.majorBrand && !isHeifBrand(probe.majorBrand)) ||
+			hasVideoBoxSignature(data, probe.start)
+		) {
+			return probe.start;
 		}
 	}
 	return null;
+}
+
+function findTrackHandlerType(
+	data: Uint8Array,
+	trakBox: IsoBoxInfo,
+): string | null {
+	const trakBoxes = scanIsoBoxes(data, trakBox.dataStart, trakBox.end);
+	const mdiaBox = trakBoxes.find((box) => box.type === "mdia");
+	if (!mdiaBox) {
+		return null;
+	}
+
+	const mdiaBoxes = scanIsoBoxes(data, mdiaBox.dataStart, mdiaBox.end);
+	const hdlrBox = mdiaBoxes.find((box) => box.type === "hdlr");
+	if (!hdlrBox) {
+		return null;
+	}
+
+	// FullBox(version+flags=4) + pre_defined=4, then handler_type.
+	const handlerOffset = hdlrBox.dataStart + 8;
+	if (handlerOffset + 4 > hdlrBox.end) {
+		return null;
+	}
+
+	return readAscii(data, handlerOffset, 4);
+}
+
+function scanIsoBoxes(
+	data: Uint8Array,
+	from: number,
+	toExclusive: number,
+): IsoBoxInfo[] {
+	const boxes: IsoBoxInfo[] = [];
+	if (toExclusive <= from || from < 0 || toExclusive > data.length) {
+		return boxes;
+	}
+
+	const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+	let offset = from;
+	while (offset + 8 <= toExclusive) {
+		const size32 = view.getUint32(offset);
+		const type = readAscii(data, offset + 4, 4);
+		let size = size32;
+		let headerSize = 8;
+
+		if (size32 === 1) {
+			if (offset + 16 > toExclusive) break;
+			const high = view.getUint32(offset + 8);
+			const low = view.getUint32(offset + 12);
+			size = high * 2 ** 32 + low;
+			headerSize = 16;
+		} else if (size32 === 0) {
+			size = toExclusive - offset;
+		}
+
+		if (!Number.isFinite(size) || size < headerSize) {
+			break;
+		}
+
+		const end = offset + size;
+		if (end > toExclusive) {
+			break;
+		}
+
+		boxes.push({
+			start: offset,
+			size,
+			headerSize,
+			type,
+			dataStart: offset + headerSize,
+			end,
+		});
+
+		offset = end;
+	}
+
+	return boxes;
 }
 
 function pickTailFtypVideoStart(data: Uint8Array): number | null {
