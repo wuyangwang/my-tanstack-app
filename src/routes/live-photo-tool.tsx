@@ -13,15 +13,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { parseHeicDirectly } from "@/lib/live-photo-parser2";
+import type { HeicParseKind } from "@/lib/heic-parser";
 
 export const Route = createFileRoute("/live-photo-tool")({
 	component: LivePhotoTool,
 });
 
 function LivePhotoTool() {
+	type ParseResultState = {
+		imagePreviewUrl: string;
+		imageBlob: Blob;
+		videoUrl?: string;
+		videoBlob?: Blob;
+		kind: HeicParseKind;
+	};
+
 	const [loading, setLoading] = useState(false);
 	const [isHovering, setIsHovering] = useState(false);
-	const [result, setResult] = useState<any>();
+	const [result, setResult] = useState<ParseResultState | null>(null);
 	const videoRef = useRef<HTMLVideoElement>(null);
 
 	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +40,7 @@ function LivePhotoTool() {
 		setLoading(true);
 		try {
 			const buffer = await file.arrayBuffer();
-			const { photoUrl, photoBlob, videoUrl, videoBlob } =
+			const { photoUrl, photoBlob, videoUrl, videoBlob, kind } =
 				await parseHeicDirectly(buffer, file);
 
 			setResult({
@@ -39,8 +48,15 @@ function LivePhotoTool() {
 				imageBlob: photoBlob,
 				videoUrl: videoUrl || undefined,
 				videoBlob: videoBlob || undefined,
+				kind,
 			});
-			toast.success(videoBlob ? "Live Photo 解析成功" : "图片读取成功");
+			toast.success(
+				kind === "animated-heic-no-video-track"
+					? "HEIC 序列图已转 MP4"
+					: videoBlob
+						? "Live Photo 解析成功"
+						: "图片读取成功",
+			);
 		} catch (err: any) {
 			console.error(err);
 			toast.error(`解析失败: ${err.message || "该文件解析出错"}`);
@@ -199,6 +215,15 @@ function LivePhotoTool() {
 									)}
 								</div>
 							)}
+
+							<div className="absolute top-6 right-6 z-20 rounded-full bg-black/50 px-3 py-1 text-xs text-white backdrop-blur-md">
+								{result.kind === "independent-video" &&
+									"独立视频轨（Mediabunny）"}
+								{result.kind === "animated-heic-no-video-track" &&
+									"序列图已转 MP4"}
+								{result.kind === "static-heic" && "静态 HEIC"}
+								{result.kind === "unknown" && "未知结构"}
+							</div>
 
 							{/* Bottom Action Bar */}
 							<div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-between items-center">
