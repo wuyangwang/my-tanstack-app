@@ -150,7 +150,8 @@ export function detectHeicStructure(data: Uint8Array): HeicStructure {
 			findPattern(data, [0x69, 0x6c, 0x6f, 0x63]) >= 0 || // iloc
 			findPattern(data, [0x69, 0x70, 0x72, 0x70]) >= 0); // iprp
 	const containerStarts = collectIsoContainerStarts(data);
-	const videoContainerStart = pickLikelyVideoStart(data, containerStarts);
+	const videoContainerStart =
+		pickLikelyVideoStart(data, containerStarts) ?? pickTailFtypVideoStart(data);
 
 	return {
 		majorBrand,
@@ -356,6 +357,22 @@ function pickLikelyVideoStart(
 	return null;
 }
 
+function pickTailFtypVideoStart(data: Uint8Array): number | null {
+	const starts = collectIsoContainerStarts(data);
+	if (starts.length < 2) return null;
+
+	// Fallback strategy: many Live Photo payloads place the embedded video near the end.
+	const lastStart = starts[starts.length - 1];
+	const brand = readMajorBrandAtStart(data, lastStart);
+	if (!brand) return null;
+
+	if (isLikelyVideoBrand(brand) || hasMp4BoxNearStart(data, lastStart)) {
+		return lastStart;
+	}
+
+	return null;
+}
+
 function readMajorBrandAtStart(data: Uint8Array, start: number): string | null {
 	if (start + 12 > data.length) return null;
 	if (readAscii(data, start + 4, 4) !== "ftyp") return null;
@@ -431,6 +448,16 @@ function hasVideoBoxSignature(data: Uint8Array, start: number): boolean {
 		findPattern(probe, [0x6d, 0x6f, 0x6f, 0x76]) >= 0 ||
 		findPattern(probe, [0x6d, 0x76, 0x68, 0x64]) >= 0 ||
 		findPattern(probe, [0x74, 0x72, 0x61, 0x6b]) >= 0
+	);
+}
+
+function hasMp4BoxNearStart(data: Uint8Array, start: number): boolean {
+	const end = Math.min(data.length, start + 8 * 1024);
+	const probe = data.subarray(start, end);
+	return (
+		findPattern(probe, [0x6d, 0x6f, 0x6f, 0x76]) >= 0 || // moov
+		findPattern(probe, [0x6d, 0x64, 0x61, 0x74]) >= 0 || // mdat
+		findPattern(probe, [0x74, 0x72, 0x61, 0x6b]) >= 0 // trak
 	);
 }
 
