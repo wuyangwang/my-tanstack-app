@@ -226,12 +226,14 @@ async function decodeHeicFramesToJpeg(
 			blob: Blob;
 			toType?: string;
 			quality?: number;
+			multiple?: true;
 		}) => Promise<Blob | Blob[]>;
 
 		const decoded = await heic2any({
 			blob: photoBlob,
 			toType: "image/jpeg",
 			quality: 0.85,
+			multiple: true,
 		});
 
 		if (Array.isArray(decoded)) {
