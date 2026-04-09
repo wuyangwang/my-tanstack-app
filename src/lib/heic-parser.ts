@@ -6,6 +6,18 @@ export type HeicParseKind =
 	| "static-heic"
 	| "unknown";
 
+export type HeifContainerModel =
+	| "item-only"
+	| "track-video"
+	| "hybrid"
+	| "unknown";
+
+export type HeifContentProfile =
+	| "live-photo-track-video"
+	| "live-photo-item-sequence"
+	| "static-image"
+	| "unsupported";
+
 export interface HeicDiagnostics {
 	majorBrand: string | null;
 	hasMeta: boolean;
@@ -19,6 +31,8 @@ export interface HeicDiagnostics {
 	mdatSelectedFrameCount: number;
 	mdatSelectedResolution: string | null;
 	usingMdatFramesForVideo: boolean;
+	containerModel: HeifContainerModel;
+	contentProfile: HeifContentProfile;
 	decodeFallback: boolean;
 	synthesizedVideoFromSequence: boolean;
 }
@@ -99,10 +113,18 @@ export async function parseHeicContainer(
 	const data = new Uint8Array(buffer);
 	const structure = detectHeicStructure(data);
 	const mdatExtraction = await extractImageFramesFromMdatItems(data);
+	const containerModel = classifyContainerModel(structure);
+	let contentProfile = classifyContentProfile({
+		structure,
+		containerModel,
+		independentVideoDetected: structure.videoContainerStart != null,
+		sequenceDetected: mdatExtraction.selectedFrameCount > 1,
+	});
 	let photoBlob: Blob = file;
 	let videoBlob: Blob | null = null;
 
 	if (
+		contentProfile === "live-photo-track-video" &&
 		structure.videoContainerStart != null &&
 		structure.videoContainerStart > 0 &&
 		structure.videoContainerStart < data.length
@@ -126,6 +148,10 @@ export async function parseHeicContainer(
 		}
 	}
 
+	if (videoBlob) {
+		contentProfile = "live-photo-track-video";
+	}
+
 	const decodedFrames = await decodeHeicFramesToJpeg(photoBlob, file.name);
 	if (decodedFrames.firstFrame) {
 		photoBlob = decodedFrames.firstFrame;
@@ -140,8 +166,18 @@ export async function parseHeicContainer(
 		photoBlob = mdatExtraction.frames[0];
 	}
 
+	if (!videoBlob) {
+		contentProfile = classifyContentProfile({
+			structure,
+			containerModel,
+			independentVideoDetected: false,
+			sequenceDetected: preferredFramesForVideo.length > 1,
+		});
+	}
+
 	const shouldEncodeSequenceMp4 =
 		!videoBlob &&
+		contentProfile === "live-photo-item-sequence" &&
 		preferredFramesForVideo.length > 1 &&
 		(structure.hasItemStructure ||
 			structure.majorBrand === "msf1" ||
@@ -176,6 +212,8 @@ export async function parseHeicContainer(
 			mdatSelectedFrameCount: mdatExtraction.selectedFrameCount,
 			mdatSelectedResolution: mdatExtraction.selectedResolution,
 			usingMdatFramesForVideo,
+			containerModel,
+			contentProfile,
 			hasImageSequence: decodedFrames.allFrames.length > 1,
 			synthesizedVideoFromSequence,
 			decodeFallback: decodedFrames.decodeFallback,
@@ -199,10 +237,46 @@ export async function parseHeicContainer(
 			mdatSelectedFrameCount: mdatExtraction.selectedFrameCount,
 			mdatSelectedResolution: mdatExtraction.selectedResolution,
 			usingMdatFramesForVideo,
+			containerModel,
+			contentProfile,
 			decodeFallback: decodedFrames.decodeFallback,
 			synthesizedVideoFromSequence,
 		},
 	};
+}
+
+function classifyContainerModel(structure: HeicStructure): HeifContainerModel {
+	if (structure.hasItemStructure && structure.hasTrackStructure) {
+		return "hybrid";
+	}
+	if (structure.hasTrackStructure || structure.videoContainerStart != null) {
+		return "track-video";
+	}
+	if (structure.hasItemStructure) {
+		return "item-only";
+	}
+	return "unknown";
+}
+
+function classifyContentProfile(input: {
+	structure: HeicStructure;
+	containerModel: HeifContainerModel;
+	independentVideoDetected: boolean;
+	sequenceDetected: boolean;
+}): HeifContentProfile {
+	if (input.independentVideoDetected) {
+		return "live-photo-track-video";
+	}
+	if (input.sequenceDetected && input.structure.hasItemStructure) {
+		return "live-photo-item-sequence";
+	}
+	if (
+		input.containerModel === "item-only" ||
+		input.structure.hasItemStructure
+	) {
+		return "static-image";
+	}
+	return "unsupported";
 }
 
 export function detectHeicStructure(data: Uint8Array): HeicStructure {
