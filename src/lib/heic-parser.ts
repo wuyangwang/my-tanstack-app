@@ -40,6 +40,29 @@ interface DecodeFramesResult {
 	decodeFallback: boolean;
 }
 
+export interface ParsedLivePhoto {
+	photoBlob: Blob;
+	photoUrl: string;
+	videoBlob: Blob | null;
+	videoUrl: string | null;
+	kind: HeicParseKind;
+}
+
+export async function parseHeicDirectly(
+	buffer: ArrayBuffer,
+	file: File,
+): Promise<ParsedLivePhoto> {
+	const result = await parseHeicContainer(buffer, file);
+
+	return {
+		photoBlob: result.photoBlob,
+		photoUrl: URL.createObjectURL(result.photoBlob),
+		videoBlob: result.videoBlob,
+		videoUrl: result.videoBlob ? URL.createObjectURL(result.videoBlob) : null,
+		kind: result.kind,
+	};
+}
+
 export async function parseHeicContainer(
 	buffer: ArrayBuffer,
 	file: File,

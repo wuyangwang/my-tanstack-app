@@ -12,8 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { parseHeicDirectly } from "@/lib/live-photo-parser2";
-import type { HeicParseKind } from "@/lib/heic-parser";
+import { parseHeicDirectly, type HeicParseKind } from "@/lib/heic-parser";
 
 export const Route = createFileRoute("/live-photo-tool")({
 	component: LivePhotoTool,
