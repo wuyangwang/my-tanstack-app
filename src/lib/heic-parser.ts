@@ -34,6 +34,16 @@ export interface HeicStructure {
 	videoContainerStart: number | null;
 }
 
+export interface HeifExtractedItem {
+	itemId: number;
+	itemType: string | null;
+	constructionMethod: number;
+	absoluteOffset: number;
+	length: number;
+	inMdat: boolean;
+	bytes: Uint8Array;
+}
+
 interface DecodeFramesResult {
 	firstFrame: Blob | null;
 	allFrames: Blob[];
@@ -671,4 +681,235 @@ function findPatternAll(data: Uint8Array, pattern: number[]): number[] {
 	}
 
 	return positions;
+}
+
+export function extractHeifItemsFromMdat(
+	data: Uint8Array,
+): HeifExtractedItem[] {
+	const topBoxes = scanIsoBoxes(data, 0, data.length);
+	const metaBox = topBoxes.find((box) => box.type === "meta");
+	if (!metaBox) {
+		return [];
+	}
+
+	const metaChildren = scanIsoBoxes(data, metaBox.dataStart + 4, metaBox.end);
+	const ilocBox = metaChildren.find((box) => box.type === "iloc");
+	if (!ilocBox) {
+		return [];
+	}
+
+	const itemTypes = parseIinfItemTypes(data, metaChildren);
+	const itemLocations = parseIlocEntries(data, ilocBox);
+	if (!itemLocations.length) {
+		return [];
+	}
+
+	const mdatRanges = topBoxes
+		.filter((box) => box.type === "mdat")
+		.map((box) => ({ start: box.dataStart, end: box.end }));
+
+	const extracted: HeifExtractedItem[] = [];
+	for (const entry of itemLocations) {
+		if (entry.constructionMethod !== 0) {
+			continue;
+		}
+
+		for (const extent of entry.extents) {
+			const absoluteOffset = entry.baseOffset + extent.offset;
+			if (absoluteOffset < 0 || extent.length <= 0) {
+				continue;
+			}
+			if (absoluteOffset + extent.length > data.length) {
+				continue;
+			}
+
+			const inMdat = mdatRanges.some(
+				(range) =>
+					absoluteOffset >= range.start &&
+					absoluteOffset + extent.length <= range.end,
+			);
+
+			extracted.push({
+				itemId: entry.itemId,
+				itemType: itemTypes.get(entry.itemId) ?? null,
+				constructionMethod: entry.constructionMethod,
+				absoluteOffset,
+				length: extent.length,
+				inMdat,
+				bytes: data.slice(absoluteOffset, absoluteOffset + extent.length),
+			});
+		}
+	}
+
+	return extracted;
+}
+
+interface IlocExtent {
+	offset: number;
+	length: number;
+}
+
+interface IlocEntry {
+	itemId: number;
+	constructionMethod: number;
+	baseOffset: number;
+	extents: IlocExtent[];
+}
+
+function parseIinfItemTypes(
+	data: Uint8Array,
+	metaChildren: IsoBoxInfo[],
+): Map<number, string> {
+	const iinfBox = metaChildren.find((box) => box.type === "iinf");
+	if (!iinfBox) {
+		return new Map();
+	}
+
+	const itemTypes = new Map<number, string>();
+	const infeBoxes = scanIsoBoxes(
+		data,
+		iinfBox.dataStart + 4,
+		iinfBox.end,
+	).filter((box) => box.type === "infe");
+	for (const infeBox of infeBoxes) {
+		const type = parseInfeItemType(data, infeBox);
+		if (!type) {
+			continue;
+		}
+		itemTypes.set(type.itemId, type.itemType);
+	}
+
+	return itemTypes;
+}
+
+function parseInfeItemType(
+	data: Uint8Array,
+	infeBox: IsoBoxInfo,
+): { itemId: number; itemType: string } | null {
+	const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+	if (infeBox.dataStart + 4 > infeBox.end) {
+		return null;
+	}
+
+	const version = data[infeBox.dataStart];
+	let offset = infeBox.dataStart + 4; // skip FullBox(version+flags)
+	if (version >= 2) {
+		const itemId =
+			version === 2 ? view.getUint16(offset) : view.getUint32(offset);
+		offset += version === 2 ? 2 : 4;
+		offset += 2; // item_protection_index
+		if (offset + 4 > infeBox.end) {
+			return null;
+		}
+		return {
+			itemId,
+			itemType: readAscii(data, offset, 4),
+		};
+	}
+	return null;
+}
+
+function parseIlocEntries(data: Uint8Array, ilocBox: IsoBoxInfo): IlocEntry[] {
+	const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+	let offset = ilocBox.dataStart;
+	if (offset + 4 > ilocBox.end) {
+		return [];
+	}
+
+	const version = data[offset];
+	offset += 4; // FullBox(version+flags)
+	if (offset + 2 > ilocBox.end) {
+		return [];
+	}
+
+	const sizeByte = data[offset];
+	const sizeByte2 = data[offset + 1];
+	const offsetSize = (sizeByte & 0xf0) >> 4;
+	const lengthSize = sizeByte & 0x0f;
+	const baseOffsetSize = (sizeByte2 & 0xf0) >> 4;
+	const indexSize = version === 1 || version === 2 ? sizeByte2 & 0x0f : 0;
+	offset += 2;
+
+	let itemCount = 0;
+	if (version < 2) {
+		if (offset + 2 > ilocBox.end) return [];
+		itemCount = view.getUint16(offset);
+		offset += 2;
+	} else {
+		if (offset + 4 > ilocBox.end) return [];
+		itemCount = view.getUint32(offset);
+		offset += 4;
+	}
+
+	const entries: IlocEntry[] = [];
+	for (let i = 0; i < itemCount; i++) {
+		if (offset >= ilocBox.end) break;
+
+		let itemId = 0;
+		if (version < 2) {
+			if (offset + 2 > ilocBox.end) break;
+			itemId = view.getUint16(offset);
+			offset += 2;
+		} else {
+			if (offset + 4 > ilocBox.end) break;
+			itemId = view.getUint32(offset);
+			offset += 4;
+		}
+
+		let constructionMethod = 0;
+		if (version === 1 || version === 2) {
+			if (offset + 2 > ilocBox.end) break;
+			const field = view.getUint16(offset);
+			constructionMethod = field & 0x000f;
+			offset += 2;
+		}
+
+		if (offset + 2 > ilocBox.end) break;
+		offset += 2; // data_reference_index
+		const baseOffset = readUintVariable(view, offset, baseOffsetSize);
+		offset += baseOffsetSize;
+
+		if (offset + 2 > ilocBox.end) break;
+		const extentCount = view.getUint16(offset);
+		offset += 2;
+
+		const extents: IlocExtent[] = [];
+		for (let j = 0; j < extentCount; j++) {
+			if ((version === 1 || version === 2) && indexSize > 0) {
+				offset += indexSize;
+			}
+			const extentOffset = readUintVariable(view, offset, offsetSize);
+			offset += offsetSize;
+			const extentLength = readUintVariable(view, offset, lengthSize);
+			offset += lengthSize;
+			extents.push({
+				offset: extentOffset,
+				length: extentLength,
+			});
+		}
+
+		entries.push({
+			itemId,
+			constructionMethod,
+			baseOffset,
+			extents,
+		});
+	}
+
+	return entries;
+}
+
+function readUintVariable(
+	view: DataView,
+	offset: number,
+	byteLength: number,
+): number {
+	if (byteLength <= 0) {
+		return 0;
+	}
+	let value = 0;
+	for (let i = 0; i < byteLength; i++) {
+		value = value * 256 + view.getUint8(offset + i);
+	}
+	return value;
 }
