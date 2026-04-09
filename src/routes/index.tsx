@@ -1,5 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Video, Mic, ArrowRight, ScanSearch, Github } from "lucide-react";
+import {
+	ArrowRight,
+	Github,
+	Images,
+	Mic,
+	ScanSearch,
+	Video,
+} from "lucide-react";
 import * as m from "@/paraglide/messages";
 
 export const Route = createFileRoute("/")({ component: App });
@@ -23,6 +30,12 @@ function App() {
 			title: m.object_detection(),
 			description: m.object_detection_description(),
 			link: "/object-detection",
+		},
+		{
+			icon: <Images className="w-12 h-12" />,
+			title: m.live_photo_tool(),
+			description: m.live_photo_tool_description(),
+			link: "/live-photo-tool",
 		},
 		{
 			icon: <Github className="w-12 h-12" />,
@@ -60,10 +73,10 @@ function App() {
 				<h2 className="text-3xl font-bold mb-12 uppercase tracking-widest text-center">
 					{m.core_features()}
 				</h2>
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-					{features.map((feature, index) => (
+				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+					{features.map((feature) => (
 						<Link
-							key={index}
+							key={feature.link}
 							to={feature.link}
 							className="group block bg-card border border-border rounded-2xl p-8 hover:border-primary/50 hover:bg-accent transition-all duration-300 shadow-sm"
 						>

@@ -1,18 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
 import {
-	Upload,
-	Download,
-	Loader2,
-	Image as ImageIcon,
-	Play,
 	Disc,
+	Download,
+	Image as ImageIcon,
+	Loader2,
+	Play,
 	Trash2,
+	Upload,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { parseHeicDirectly, type HeicParseKind } from "@/lib/heic-parser";
+import { type HeicParseKind, parseHeicDirectly } from "@/lib/heic-parser";
 
 export const Route = createFileRoute("/live-photo-tool")({
 	component: LivePhotoTool,
@@ -25,6 +25,7 @@ function LivePhotoTool() {
 		videoUrl?: string;
 		videoBlob?: Blob;
 		kind: HeicParseKind;
+		sourceBaseName: string;
 	};
 
 	const [loading, setLoading] = useState(false);
@@ -48,6 +49,7 @@ function LivePhotoTool() {
 				videoUrl: videoUrl || undefined,
 				videoBlob: videoBlob || undefined,
 				kind,
+				sourceBaseName: getFileBaseName(file.name),
 			});
 			toast.success(
 				kind === "animated-heic-no-video-track"
@@ -56,9 +58,11 @@ function LivePhotoTool() {
 						? "Live Photo 解析成功"
 						: "图片读取成功",
 			);
-		} catch (err: any) {
+		} catch (err: unknown) {
 			console.error(err);
-			toast.error(`解析失败: ${err.message || "该文件解析出错"}`);
+			const errorMessage =
+				err instanceof Error ? err.message : "该文件解析出错";
+			toast.error(`解析失败: ${errorMessage}`);
 		} finally {
 			setLoading(false);
 		}
@@ -71,6 +75,30 @@ function LivePhotoTool() {
 		a.download = fileName;
 		a.click();
 		setTimeout(() => URL.revokeObjectURL(url), 100);
+	};
+
+	const getFileBaseName = (fileName: string) => {
+		const dotIndex = fileName.lastIndexOf(".");
+		return dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName;
+	};
+
+	const extensionFromMimeType = (mimeType: string) => {
+		switch (mimeType) {
+			case "image/jpeg":
+				return "jpg";
+			case "image/png":
+				return "png";
+			case "image/webp":
+				return "webp";
+			case "image/gif":
+				return "gif";
+			default:
+				return "jpg";
+		}
+	};
+
+	const buildImageDownloadName = (baseName: string, blob: Blob) => {
+		return `${baseName}.${extensionFromMimeType(blob.type)}`;
 	};
 
 	useEffect(() => {
@@ -190,10 +218,20 @@ function LivePhotoTool() {
 
 							{/* Live Icon Overlay */}
 							{result.videoUrl && (
-								<div
-									className="absolute top-6 left-6 z-20"
+								<button
+									type="button"
+									className="absolute top-6 left-6 z-20 bg-transparent border-0 p-0 text-left"
+									aria-label="播放 Live Photo 预览"
 									onMouseEnter={() => setIsHovering(true)}
 									onMouseLeave={() => setIsHovering(false)}
+									onFocus={() => setIsHovering(true)}
+									onBlur={() => setIsHovering(false)}
+									onKeyDown={(event) => {
+										if (event.key === "Enter" || event.key === " ") {
+											event.preventDefault();
+											setIsHovering((value) => !value);
+										}
+									}}
 								>
 									<div
 										className={`flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-xl border border-white/30 transition-all duration-300 cursor-help ${isHovering ? "bg-primary text-white scale-110 shadow-[0_0_20px_rgba(var(--primary),0.5)]" : "bg-black/40 text-white/90"}`}
@@ -212,7 +250,7 @@ function LivePhotoTool() {
 											悬停此处播放
 										</div>
 									)}
-								</div>
+								</button>
 							)}
 
 							<div className="absolute top-6 right-6 z-20 rounded-full bg-black/50 px-3 py-1 text-xs text-white backdrop-blur-md">
@@ -230,7 +268,15 @@ function LivePhotoTool() {
 									<Button
 										variant="secondary"
 										className="rounded-full font-bold shadow-xl backdrop-blur-md bg-white/20 hover:bg-white/30 text-white border-none"
-										onClick={() => downloadFile(result.imageBlob, "image.jpg")}
+										onClick={() =>
+											downloadFile(
+												result.imageBlob,
+												buildImageDownloadName(
+													result.sourceBaseName,
+													result.imageBlob,
+												),
+											)
+										}
 									>
 										<Download className="mr-2 h-4 w-4" />{" "}
 										{result.videoUrl ? "JPG" : "下载"}
