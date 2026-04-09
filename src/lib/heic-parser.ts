@@ -16,6 +16,8 @@ export interface HeicDiagnostics {
 	decodedFrameCount: number;
 	mdatItemCount: number;
 	mdatDecodedFrameCount: number;
+	mdatSelectedFrameCount: number;
+	mdatSelectedResolution: string | null;
 	usingMdatFramesForVideo: boolean;
 	decodeFallback: boolean;
 	synthesizedVideoFromSequence: boolean;
@@ -56,6 +58,15 @@ interface DecodeFramesResult {
 interface MdatFrameExtractionResult {
 	frames: Blob[];
 	totalItems: number;
+	selectedFrameCount: number;
+	selectedResolution: string | null;
+}
+
+interface DecodedItemFrame {
+	blob: Blob;
+	width: number;
+	height: number;
+	absoluteOffset: number;
 }
 
 export interface ParsedLivePhoto {
@@ -125,6 +136,9 @@ export async function parseHeicContainer(
 			? mdatExtraction.frames
 			: decodedFrames.allFrames;
 	const usingMdatFramesForVideo = mdatExtraction.frames.length > 1;
+	if (usingMdatFramesForVideo && mdatExtraction.frames[0]) {
+		photoBlob = mdatExtraction.frames[0];
+	}
 
 	const shouldEncodeSequenceMp4 =
 		!videoBlob &&
@@ -159,6 +173,8 @@ export async function parseHeicContainer(
 			decodedFrameCount: decodedFrames.allFrames.length,
 			mdatItemCount: mdatExtraction.totalItems,
 			mdatDecodedFrameCount: mdatExtraction.frames.length,
+			mdatSelectedFrameCount: mdatExtraction.selectedFrameCount,
+			mdatSelectedResolution: mdatExtraction.selectedResolution,
 			usingMdatFramesForVideo,
 			hasImageSequence: decodedFrames.allFrames.length > 1,
 			synthesizedVideoFromSequence,
@@ -180,6 +196,8 @@ export async function parseHeicContainer(
 			decodedFrameCount: decodedFrames.allFrames.length,
 			mdatItemCount: mdatExtraction.totalItems,
 			mdatDecodedFrameCount: mdatExtraction.frames.length,
+			mdatSelectedFrameCount: mdatExtraction.selectedFrameCount,
+			mdatSelectedResolution: mdatExtraction.selectedResolution,
 			usingMdatFramesForVideo,
 			decodeFallback: decodedFrames.decodeFallback,
 			synthesizedVideoFromSequence,
@@ -772,6 +790,8 @@ async function extractImageFramesFromMdatItems(
 		return {
 			frames: [],
 			totalItems: 0,
+			selectedFrameCount: 0,
+			selectedResolution: null,
 		};
 	}
 
@@ -782,10 +802,12 @@ async function extractImageFramesFromMdatItems(
 		return {
 			frames: [],
 			totalItems: 0,
+			selectedFrameCount: 0,
+			selectedResolution: null,
 		};
 	}
 
-	const frames: Blob[] = [];
+	const decodedFrames: DecodedItemFrame[] = [];
 	for (const item of items) {
 		const mime = detectEmbeddedImageMime(item.bytes);
 		if (!mime) {
@@ -795,16 +817,35 @@ async function extractImageFramesFromMdatItems(
 		const normalizedBytes = new Uint8Array(item.bytes.byteLength);
 		normalizedBytes.set(item.bytes);
 		const blob = new Blob([normalizedBytes], { type: mime });
-		if (!(await canDecodeImageBlob(blob))) {
+		const decoded = await decodeImageBlobInfo(blob);
+		if (!decoded) {
 			continue;
 		}
 
-		frames.push(blob);
+		decodedFrames.push({
+			blob,
+			width: decoded.width,
+			height: decoded.height,
+			absoluteOffset: item.absoluteOffset,
+		});
 	}
 
+	if (!decodedFrames.length) {
+		return {
+			frames: [],
+			totalItems: items.length,
+			selectedFrameCount: 0,
+			selectedResolution: null,
+		};
+	}
+
+	const selected = selectPrimarySequenceFrames(decodedFrames);
+
 	return {
-		frames,
+		frames: selected.frames,
 		totalItems: items.length,
+		selectedFrameCount: selected.frames.length,
+		selectedResolution: selected.resolution,
 	};
 }
 
@@ -1010,12 +1051,62 @@ function detectEmbeddedImageMime(bytes: Uint8Array): string | null {
 	return null;
 }
 
-async function canDecodeImageBlob(blob: Blob): Promise<boolean> {
+function selectPrimarySequenceFrames(frames: DecodedItemFrame[]): {
+	frames: Blob[];
+	resolution: string | null;
+} {
+	const groups = new Map<string, DecodedItemFrame[]>();
+	for (const frame of frames) {
+		const key = `${frame.width}x${frame.height}`;
+		const list = groups.get(key);
+		if (list) {
+			list.push(frame);
+		} else {
+			groups.set(key, [frame]);
+		}
+	}
+
+	let bestKey: string | null = null;
+	let bestGroup: DecodedItemFrame[] = [];
+	for (const [key, group] of groups) {
+		if (
+			group.length > bestGroup.length ||
+			(group.length === bestGroup.length &&
+				compareResolutionKey(key, bestKey) > 0)
+		) {
+			bestKey = key;
+			bestGroup = group;
+		}
+	}
+
+	const ordered = [...bestGroup].sort(
+		(a, b) => a.absoluteOffset - b.absoluteOffset,
+	);
+	return {
+		frames: ordered.map((frame) => frame.blob),
+		resolution: bestKey,
+	};
+}
+
+function compareResolutionKey(a: string, b: string | null): number {
+	if (!b) {
+		return 1;
+	}
+	const [aw, ah] = a.split("x").map((v) => Number(v));
+	const [bw, bh] = b.split("x").map((v) => Number(v));
+	return aw * ah - bw * bh;
+}
+
+async function decodeImageBlobInfo(
+	blob: Blob,
+): Promise<{ width: number; height: number } | null> {
 	try {
 		const bitmap = await createImageBitmap(blob);
+		const width = bitmap.width;
+		const height = bitmap.height;
 		bitmap.close();
-		return true;
+		return { width, height };
 	} catch {
-		return false;
+		return null;
 	}
 }
